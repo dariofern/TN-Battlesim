@@ -496,12 +496,30 @@ for loop in range(sidenat2):
 populationcity=int(input('nearby population'))/6000
 Scoreside1 = sidescoreDef2-sidescoreat1
 Scoreside2 = sidescoreDef1-sidescoreat2
-if Scoreside1<Scoreside2 :
+
+def who_knows_what_this_even_does(side, win, loss):
+    global populationcity
+    global Inf
+    global CInf
+    global Tanks
+    global CTanks
+    global AFV
+    global CAFV
+    global AAA
+    global CAAA
+    global FA
+    global CFA
+    global Fighter
+    global CFighter
+    global Bomber
+    global CBomber
+    global BattleS
+    global CBattleS
     print()
-    print(str(Side1)," won the battle!")
+    print(str(side)," won the battle!")
     Listside.sort()
     for i in range (0,number-1):
-        if Listside[i][0] == 1:
+        if Listside[i][0] == win:
             Inf='Inf'+str(Listside[i][1])
             Tanks='Tanks'+str(Listside[i][1])
             AFV='AFV'+str(Listside[i][1])
@@ -537,7 +555,7 @@ if Scoreside1<Scoreside2 :
                 cons='cons'+str(Listside[i][1])
                 if globals()[cons]==1:
                     populationcity=populationcity+casucount(CBattleS,CDestroyer,CCruisers,CUboat,CTroopS,CFighter,CBomber,i,"winner",tr,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,2,populationcity)
-        if Listside[i][0] == 2:
+        if Listside[i][0] == loss:
             Inf='Inf'+str(Listside[i][1])
             Tanks='Tanks'+str(Listside[i][1])
             AFV='AFV'+str(Listside[i][1])
@@ -573,86 +591,13 @@ if Scoreside1<Scoreside2 :
                 cons='cons'+str(Listside[i][1])
                 if globals()[cons]==1:
                     populationcity=populationcity+casucount(CBattleS,CDestroyer,CCruisers,CUboat,CTroopS,CFighter,CBomber,i,"loser",tr,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,2,populationcity)
-            
-    print('Civil casualties:',populationcity)
-
-if Scoreside1>Scoreside2 :
-    print()
-    print(str(Side2)," won the battle!")
-    Listside.sort()
-    for i in range (0,number-1):
-        if Listside[i][0] == 2:
-            Inf='Inf'+str(Listside[i][1])
-            Tanks='Tanks'+str(Listside[i][1])
-            AFV='AFV'+str(Listside[i][1])
-            AAA='AAA'+str(Listside[i][1])
-            FA='FA'+str(Listside[i][1])
-            Fighter='Fighter'+str(Listside[i][1])
-            Bomber='Bomber'+str(Listside[i][1])
-            CInf='CInf'+str(Listside[i][1])
-            CTanks='CTanks'+str(Listside[i][1])
-            CAFV='CAFV'+str(Listside[i][1])
-            CAAA='CAAA'+str(Listside[i][1])
-            CFA='CFA'+str(Listside[i][1])
-            CFighter='CFighter'+str(Listside[i][1])
-            CBomber='CBomber'+str(Listside[i][1])
-            if typ==1:
-                populationcity=populationcity+casucount(Inf,Tanks,AFV,AAA,FA,Fighter,Bomber,i,"winner",0,sidescoreat2,sidescoreat1,sidescoreDef2,sidescoreDef1,sidescoreairat2,sidescoreairat1,sidescoreairDef2,sidescoreairDef1,1,populationcity)
-                cons='cons'+str(Listside[i][1])
-                if globals()[cons]==1:
-                    populationcity=populationcity+casucount(CInf,CTanks,CAFV,CAAA,CFA,CFighter,CBomber,i,"winner",0,sidescoreat2,sidescoreat1,sidescoreDef2,sidescoreDef1,sidescoreairat2,sidescoreairat1,sidescoreairDef2,sidescoreairDef1,1,populationcity)
-            if typ==2:
-                tr='tr'+str(Listside[i][1])
-                BattleS='BattleS'+str(Listside[i][1])
-                Destroyer='Destroyers'+str(Listside[i][1])
-                Cruisers='Cruisers'+str(Listside[i][1])
-                Uboat='Uboat'+str(Listside[i][1])
-                TroopS='TroopS'+str(Listside[i][1])
-                CBattleS='BattleS'+str(Listside[i][1])
-                CDestroyer='Destroyers'+str(Listside[i][1])
-                CCruisers='Cruisers'+str(Listside[i][1])
-                CUboat='Uboat'+str(Listside[i][1])
-                CTroopS='TroopS'+str(Listside[i][1])
-                populationcity=populationcity+casucount(BattleS,Destroyer,Cruisers,Uboat,TroopS,Fighter,Bomber,i,"winner",tr,sidescoreat2,sidescoreat1,sidescoreDef2,sidescoreDef1,sidescoreairat2,sidescoreairat1,sidescoreairDef2,sidescoreairDef1,2,populationcity)
-                cons='cons'+str(Listside[i][1])
-                if globals()[cons]==1:
-                    populationcity=populationcity+casucount(CBattleS,CDestroyer,CCruisers,CUboat,CTroopS,CFighter,CBomber,i,"winner",tr,sidescoreat2,sidescoreat1,sidescoreDef2,sidescoreDef1,sidescoreairat2,sidescoreairat1,sidescoreairDef2,sidescoreairDef1,2,populationcity)
-        if Listside[i][0] == 1:
-            Inf='Inf'+str(Listside[i][1])
-            Tanks='Tanks'+str(Listside[i][1])
-            AFV='AFV'+str(Listside[i][1])
-            AAA='AAA'+str(Listside[i][1])
-            FA='FA'+str(Listside[i][1])
-            Fighter='Fighter'+str(Listside[i][1])
-            Bomber='Bomber'+str(Listside[i][1])
-            CInf='CInf'+str(Listside[i][1])
-            CTanks='CTanks'+str(Listside[i][1])
-            CAFV='CAFV'+str(Listside[i][1])
-            CAAA='CAAA'+str(Listside[i][1])
-            CFA='CFA'+str(Listside[i][1])
-            CFighter='CFighter'+str(Listside[i][1])
-            CBomber='CBomber'+str(Listside[i][1])
-            if typ==1:
-                populationcity=populationcity+casucount(Inf,Tanks,AFV,AAA,FA,Fighter,Bomber,i,"loser",0,sidescoreat2,sidescoreat1,sidescoreDef2,sidescoreDef1,sidescoreairat2,sidescoreairat1,sidescoreairDef2,sidescoreairDef1,1,populationcity)
-                cons='cons'+str(Listside[i][1])
-                if globals()[cons]==1:
-                    populationcity=populationcity+casucount(CInf,CTanks,CAFV,CAAA,CFA,CFighter,CBomber,i,"loser",0,sidescoreat2,sidescoreat1,sidescoreDef2,sidescoreDef1,sidescoreairat2,sidescoreairat1,sidescoreairDef2,sidescoreairDef1,1,populationcity)
-            if typ==2:
-                tr='tr'+str(Listside[i][1])
-                BattleS='BattleS'+str(Listside[i][1])
-                Destroyer='Destroyers'+str(Listside[i][1])
-                Cruisers='Cruisers'+str(Listside[i][1])
-                Uboat='Uboat'+str(Listside[i][1])
-                TroopS='TroopS'+str(Listside[i][1])
-                CBattleS='BattleS'+str(Listside[i][1])
-                CDestroyer='Destroyers'+str(Listside[i][1])
-                CCruisers='Cruisers'+str(Listside[i][1])
-                CUboat='Uboat'+str(Listside[i][1])
-                CTroopS='TroopS'+str(Listside[i][1])
-                populationcity=populationcity+casucount(BattleS,Destroyer,Cruisers,Uboat,TroopS,Fighter,Bomber,i,"loser",tr,sidescoreat2,sidescoreat1,sidescoreDef2,sidescoreDef1,sidescoreairat2,sidescoreairat1,sidescoreairDef2,sidescoreairDef1,2,populationcity)
-                cons='cons'+str(Listside[i][1])
-                if globals()[cons]==1:
-                    populationcity=populationcity+casucount(CBattleS,CDestroyer,CCruisers,CUboat,CTroopS,CFighter,CBomber,i,"loser",tr,sidescoreat2,sidescoreat1,sidescoreDef2,sidescoreDef1,sidescoreairat2,sidescoreairat1,sidescoreairDef2,sidescoreairDef1,2,populationcity)
-            
+ 
     populationcity=round(populationcity,0)
     print('Civil casualties:',populationcity)
+
+
+if Scoreside1<Scoreside2 :
+    who_knows_what_this_even_does(Side1, 1, 2)
+else:
+    who_knows_what_this_even_does(Side2, 2, 1)
+            
