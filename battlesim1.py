@@ -595,7 +595,7 @@ def who_knows_what_this_even_does(side, win, loss):
     populationcity=round(populationcity,0)
     print('Civil casualties:',populationcity)
 
-
+    
 if Scoreside1<Scoreside2 :
     who_knows_what_this_even_does(Side1, 1, 2)
 else:
