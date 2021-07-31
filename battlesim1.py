@@ -1,6 +1,18 @@
+#!/usr/bin/env python3
+
 #LAND BATTLE SIMULATOR
 
+from unit import load_unit_data
+
+import pathlib
 import random
+
+UNIT_DATA_FILE = f"{pathlib.Path(__file__).parent}/units.csv"
+
+# Load at global scope to avoid loading more than once.
+# Tuple ensures immutability.
+with open(UNIT_DATA_FILE) as f:
+    UNIT_TYPES = tuple(load_unit_data(f))
 
 def score(t,tadv,tren,wag,wagc,mult,a,b,c,d,e,f,g,h,i,j,k,l,m,n):
     if t==1:
@@ -81,22 +93,46 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
     print()
     globals()[teamname]= input("Name of the country : ")
 
+    national_units = {}
+    allowed_classes = set()
+
+    # Land battle
+    if typ == 1:
+        allowed_classes |= {"land", "air"}
+    elif typ == 2:
+        # TODO needs to allow fighters for coastal battles.
+        allowed_classes |= {"naval"}
+    else:
+        raise ValueError(f"Battle type must be 1 or 2, not {typ}.")
+
     if typ==1:
+        # Kept inside if block to ensure automated input always works.
+        for unit in UNIT_TYPES:
+            if unit.unit_class not in allowed_classes:
+                continue
+            while True:
+                try:
+                    qty = int(input(f"{unit.name} : "))
+                    break
+                except:
+                    print("Quantity must be an integer. Please try again.")
+
+            national_units[unit.name] = qty
 
         Inf='Inf'+str(n)
-        globals()[Inf] = int(input("Infantrymen : "))
+        globals()[Inf] = national_units["infantry"]
         Tanks='Tanks'+str(n)
-        globals()[Tanks] = int(input("Tanks : "))
+        globals()[Tanks] = national_units["tank"]
         AFV='AFV'+str(n)
-        globals()[AFV] = int(input("AFVs :"))
+        globals()[AFV] = national_units["AFV"]
         AAA='AAA'+str(n)
-        globals()[AAA] = int(input("AAA cannons : "))
+        globals()[AAA] = national_units["AAA"]
         FA='FA'+str(n)
-        globals()[FA] = int(input("FA cannons : "))
+        globals()[FA] = national_units["FA"]
         Fighter='Fighter'+str(n)
-        globals()[Fighter] = int(input("Fighters : "))
+        globals()[Fighter] = national_units["fighter"]
         Bomber='Bomber'+str(n)
-        globals()[Bomber] = int(input("Bombers : "))
+        globals()[Bomber] = national_units["bomber"]
 
         cons='cons'+str(n)
         globals()[cons]=int(input("Conscripts ? [1]:yes [0]:no"))
