@@ -119,7 +119,6 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
         allowed_classes |= {"land", "air"}
     # Naval battle
     elif typ == 2:
-        # TODO needs to allow fighters for coastal battles.
         allowed_classes |= {"naval"}
         coas=int(input("Coastal battle ? [1]:yes [0]:no"))
         if coas == 1:
