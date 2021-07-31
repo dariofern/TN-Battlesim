@@ -172,9 +172,9 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
     globals()[BattleS] = national_units["battleship"].qty
     CBattleS='CBattleS'+str(n)
     globals()[CBattleS] =national_units["battleship"].qty_conscript
-    Destroyer='Destroyers'+str(n)
+    Destroyer='Destroyer'+str(n)
     globals()[Destroyer] = national_units["destroyer"].qty
-    CDestroyer='CDestroyers'+str(n)
+    CDestroyer='CDestroyer'+str(n)
     globals()[CDestroyer] = national_units["destroyer"].qty_conscript
     Cruisers='Cruisers'+str(n)
     globals()[Cruisers] = national_units["cruiser"].qty
