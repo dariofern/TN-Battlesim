@@ -4,7 +4,7 @@
 
 from unit import load_unit_data
 
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 import pathlib
 import random
 
@@ -111,8 +111,7 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
     print()
     globals()[teamname]= input("Name of the country : ")
 
-    national_units = {}
-    national_units.setdefault(UnitQuantity(0, 0))
+    national_units = defaultdict(lambda : UnitQuantity(0, 0))
     allowed_classes = set()
 
     # Land battle
@@ -135,60 +134,60 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
         if unit.unit_class not in allowed_classes:
             continue
         qty = input_positive_integer(f"{unit.name} : ")
-        qty_conscripts = 0
+        qty_conscript = 0
         if globals()[cons] == 1:
             qty_conscript = input_positive_integer(f"conscript {unit.name} : ")
         national_units[unit.name] = UnitQuantity(qty, qty_conscript)
 
     # Set all global variables for troop types. *insert woozy face emoji*
     Inf='Inf'+str(n)
-    globals()[Inf] = national_units.get("infantry").qty
+    globals()[Inf] = national_units["infantry"].qty
     CInf='CInf'+str(n)
-    globals()[CInf] = national_units.get("infantry").qty_conscript
+    globals()[CInf] = national_units["infantry"].qty_conscript
     Tanks='Tanks'+str(n)
-    globals()[Tanks] = national_units.get("tank").qty
+    globals()[Tanks] = national_units["tank"].qty
     CTanks='CTanks'+str(n)
-    globals()[CTanks] = national_units.get("tank").qty_conscript
+    globals()[CTanks] = national_units["tank"].qty_conscript
     AFV='AFV'+str(n)
-    globals()[AFV] = national_units.get("AFV").qty
+    globals()[AFV] = national_units["AFV"].qty
     CAFV='CAFV'+str(n)
-    globals()[CAFV] = national_units.get("AFV").qty_conscript
+    globals()[CAFV] = national_units["AFV"].qty_conscript
     AAA='AAA'+str(n)
-    globals()[AAA] = national_units.get("AAA").qty
+    globals()[AAA] = national_units["AAA"].qty
     CAAA='CAAA'+str(n)
-    globals()[CAAA] = national_units.get("AAA").qty_conscript
+    globals()[CAAA] = national_units["AAA"].qty_conscript
     FA='FA'+str(n)
-    globals()[FA] = national_units.get("FA").qty
+    globals()[FA] = national_units["FA"].qty
     CFA='CFA'+str(n)
-    globals()[CFA] = national_units.get("FA").qty_conscript
+    globals()[CFA] = national_units["FA"].qty_conscript
     Fighter='Fighter'+str(n)
-    globals()[Fighter] = national_units.get("fighter").qty
+    globals()[Fighter] = national_units["fighter"].qty
     CFighter='CFighter'+str(n)
-    globals()[CFighter] = national_units.get("fighter").qty_conscript
+    globals()[CFighter] = national_units["fighter"].qty_conscript
     Bomber='Bomber'+str(n)
-    globals()[Bomber] = national_units.get("bomber").qty
+    globals()[Bomber] = national_units["bomber"].qty
     CBomber='CBomber'+str(n)
-    globals()[CBomber] = national_units.get("bomber").qty_conscript
+    globals()[CBomber] = national_units["bomber"].qty_conscript
     BattleS='BattleS'+str(n)
-    globals()[BattleS] = national_units.get("battleship").qty
+    globals()[BattleS] = national_units["battleship"].qty
     CBattleS='CBattleS'+str(n)
-    globals()[CBattleS] =national_units.get("battleship").qty_conscript
+    globals()[CBattleS] =national_units["battleship"].qty_conscript
     Destroyer='Destroyers'+str(n)
-    globals()[Destroyer] = national_units.get("destroyer").qty
+    globals()[Destroyer] = national_units["destroyer"].qty
     CDestroyer='CDestroyers'+str(n)
-    globals()[CDestroyer] = national_units.get("destroyer").qty_conscript
+    globals()[CDestroyer] = national_units["destroyer"].qty_conscript
     Cruisers='Cruisers'+str(n)
-    globals()[Cruisers] = national_units.get("cruiser").qty
+    globals()[Cruisers] = national_units["cruiser"].qty
     CCruisers = 'CCruisers'+str(n)
-    globals()[CCruisers] = national_units.get("cruiser.").qty_conscript
+    globals()[CCruisers] = national_units["cruiser."].qty_conscript
     Uboat='Uboat'+str(n)
-    globals()[Uboat] = national_units.get("uboat").qty
+    globals()[Uboat] = national_units["uboat"].qty
     CUboat='CUboat'+str(n)
-    globals()[CUboat] = national_units.get("uboat").qty_conscript
+    globals()[CUboat] = national_units["uboat"].qty_conscript
     TroopS='TroopS'+str(n)
-    globals()[TroopS] = national_units.get("troopship").qty
+    globals()[TroopS] = national_units["troopship"].qty
     CTroopS='CTroopS'+str(n)
-    globals()[CTroopS] = national_units.get("troopship").qty_conscript
+    globals()[CTroopS] = national_units["troopship"].qty_conscript
 
     tr='tr'+str(n)
     if (globals()[TroopS]+globals()[CTroopS])!=0:
