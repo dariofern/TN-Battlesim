@@ -1,0 +1,83 @@
+Done by Rainy :)
+**Type of battle [1]:land, [2]:sea :**
+**Land Battle Template:**
+
+Name of the first side : 
+# of Nations fighting for this side :
+Name of the country :
+Conscripts [1]:yes, [0]: no : 
+**[If yes, you will have to fill out # of conscript troop following each category
+EX: Infantry : 10000
+EX: Conscript Infantry : 1000]**
+Infantry : 
+Tank : 
+AFV : 
+AAA : 
+FA : 
+Fighter : 
+Bomber : 
+Country stats :
+Military budget (without the $ and no commas) :
+Research budget (without the $ and no commas) : 
+Wage level (1-4) : 
+Conscript Wage level (1-4) : 
+Recent Battles (one year) : 
+Recent Battles lost (one year) : 
+Recent Battles won (one year) : 
+Terrain Knowledge (out of 5) : 
+Climate malus : 
+Entrenchement? [0]:no, [1]:yes : 
+**- IF YES -**
+Entrenchement level : 
+**- IF YES -**
+Elevation advantage? [0]:no, [1]:yes : 
+Defending a river? [0]:no, [1]:yes : 
+Defending a city? [0]:no, [1]:yes : 
+Disembarkment ? [0]:no, [1]:yes : 
+Supply line cut ? [0]:no, [1]:yes
+General's defense skills :
+General's attack skills : 
+Offensive Tactic bonus : 
+Defensive Tactic bonus : 
+
+Name of the second side :
+# of Nations fighting for this side :
+Name of the country :
+Conscripts [1]:yes, [0]: no : 
+**[If yes, you will have to fill out # of conscript troop following each category
+EX: Infantry : 10000
+EX: Conscript Infantry : 1000]**
+Infantry : 
+Tank : 
+AFV : 
+AAA : 
+FA : 
+Fighter : 
+Bomber : 
+Country stats :
+Military budget (without the $ and no commas) :
+Research budget (without the $ and no commas) : 
+Wage level (1-4) : 
+Conscript Wage level (1-4) : 
+Recent Battles (one year) : 
+Recent Battles lost (one year) : 
+Recent Battles won (one year) : 
+Terrain Knowledge (out of 5) : 
+Climate malus : 
+Entrenchement? [0]:no, [1]:yes : 
+**- IF YES -**
+Entrenchement level : 
+**- IF YES -**
+Elevation advantage? [0]:no, [1]:yes : 
+Defending a river? [0]:no, [1]:yes : 
+Defending a city? [0]:no, [1]:yes : 
+Disembarkment ? [0]:no, [1]:yes : 
+Supply line cut ? [0]:no, [1]:yes
+General's defense skills :
+General's attack skills : 
+Offensive Tactic bonus : 
+Defensive Tactic bonus :
+Nearby population :
+
+**DONE**
+Done by Rainy :)
