@@ -1,9 +1,11 @@
 Unit Class,Unit Name,Defense,Attack
 land,infantry,2,5
 land,tank,15,15
+land,AFV,10,8
+land,AAA,6,15
+land,FA,6,25
 air,fighter,8,12
 air,bomber,10,20
-land,AFV,10,8
 naval,battleship,60,60
 naval,destroyer,30,40
 naval,cruiser,45,45
