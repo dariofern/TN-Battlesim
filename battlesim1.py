@@ -4,6 +4,7 @@
 
 from unit import load_unit_data
 
+from collections import namedtuple
 import pathlib
 import random
 
@@ -13,6 +14,8 @@ UNIT_DATA_FILE = f"{pathlib.Path(__file__).parent}/units.csv"
 # Tuple ensures immutability.
 with open(UNIT_DATA_FILE) as f:
     UNIT_TYPES = tuple(load_unit_data(f))
+
+UnitQuantity = namedtuple("UnitQuantity", ["qty", "qty_conscript"])
 
 def score(t,tadv,tren,wag,wagc,mult,a,b,c,d,e,f,g,h,i,j,k,l,m,n):
     if t==1:
@@ -88,188 +91,110 @@ def casualties(unit,scatW,scatL,scdefW,scdefL,status,casu,sn,mult,cons,typ,air):
 
 #DATA INPUT
 
+def input_positive_integer(prompt):
+    """
+    Get a positive integer from the input.
+    
+    Will retry until a valid input is entered.
+    """
+    while True:
+        try:
+            n = int(input(prompt))
+            if n < 0:
+                raise ValueError()
+            return n
+        except ValueError:
+            print("Value must be a positive integer.")
+
 def TEAM(n,sidesat,sidesdef,nsid,li,typ):
     teamname='Team'+str(n)
     print()
     globals()[teamname]= input("Name of the country : ")
 
     national_units = {}
+    national_units.setdefault(UnitQuantity(0, 0))
     allowed_classes = set()
 
     # Land battle
     if typ == 1:
         allowed_classes |= {"land", "air"}
+    # Naval battle
     elif typ == 2:
         # TODO needs to allow fighters for coastal battles.
         allowed_classes |= {"naval"}
+        coas=int(input("Coastal battle ? [1]:yes [0]:no"))
+        if coas == 1:
+            allowed_classes |= {"air"}
     else:
         raise ValueError(f"Battle type must be 1 or 2, not {typ}.")
 
-    if typ==1:
-        # Kept inside if block to ensure automated input always works.
-        for unit in UNIT_TYPES:
-            if unit.unit_class not in allowed_classes:
-                continue
-            while True:
-                try:
-                    qty = int(input(f"{unit.name} : "))
-                    break
-                except:
-                    print("Quantity must be an integer. Please try again.")
+    cons='cons'+str(n)
+    globals()[cons]=int(input("Conscripts ? [1]:yes [0]:no"))
 
-            national_units[unit.name] = qty
+    for unit in UNIT_TYPES:
+        if unit.unit_class not in allowed_classes:
+            continue
+        qty = input_positive_integer(f"{unit.name} : ")
+        qty_conscripts = 0
+        if globals()[cons] == 1:
+            qty_conscript = input_positive_integer(f"conscript {unit.name} : ")
+        national_units[unit.name] = UnitQuantity(qty, qty_conscript)
 
-        Inf='Inf'+str(n)
-        globals()[Inf] = national_units["infantry"]
-        Tanks='Tanks'+str(n)
-        globals()[Tanks] = national_units["tank"]
-        AFV='AFV'+str(n)
-        globals()[AFV] = national_units["AFV"]
-        AAA='AAA'+str(n)
-        globals()[AAA] = national_units["AAA"]
-        FA='FA'+str(n)
-        globals()[FA] = national_units["FA"]
-        Fighter='Fighter'+str(n)
-        globals()[Fighter] = national_units["fighter"]
-        Bomber='Bomber'+str(n)
-        globals()[Bomber] = national_units["bomber"]
+    # Set all global variables for troop types. *insert woozy face emoji*
+    Inf='Inf'+str(n)
+    globals()[Inf] = national_units.get("infantry").qty
+    CInf='CInf'+str(n)
+    globals()[CInf] = national_units.get("infantry").qty_conscript
+    Tanks='Tanks'+str(n)
+    globals()[Tanks] = national_units.get("tank").qty
+    CTanks='CTanks'+str(n)
+    globals()[CTanks] = national_units.get("tank").qty_conscript
+    AFV='AFV'+str(n)
+    globals()[AFV] = national_units.get("AFV").qty
+    CAFV='CAFV'+str(n)
+    globals()[CAFV] = national_units.get("AFV").qty_conscript
+    AAA='AAA'+str(n)
+    globals()[AAA] = national_units.get("AAA").qty
+    CAAA='CAAA'+str(n)
+    globals()[CAAA] = national_units.get("AAA").qty_conscript
+    FA='FA'+str(n)
+    globals()[FA] = national_units.get("FA").qty
+    CFA='CFA'+str(n)
+    globals()[CFA] = national_units.get("FA").qty_conscript
+    Fighter='Fighter'+str(n)
+    globals()[Fighter] = national_units.get("fighter").qty
+    CFighter='CFighter'+str(n)
+    globals()[CFighter] = national_units.get("fighter").qty_conscript
+    Bomber='Bomber'+str(n)
+    globals()[Bomber] = national_units.get("bomber").qty
+    CBomber='CBomber'+str(n)
+    globals()[CBomber] = national_units.get("bomber").qty_conscript
+    BattleS='BattleS'+str(n)
+    globals()[BattleS] = national_units.get("battleship").qty
+    CBattleS='CBattleS'+str(n)
+    globals()[CBattleS] =national_units.get("battleship").qty_conscript
+    Destroyer='Destroyers'+str(n)
+    globals()[Destroyer] = national_units.get("destroyer").qty
+    CDestroyer='CDestroyers'+str(n)
+    globals()[CDestroyer] = national_units.get("destroyer").qty_conscript
+    Cruisers='Cruisers'+str(n)
+    globals()[Cruisers] = national_units.get("cruiser").qty
+    CCruisers = 'CCruisers'+str(n)
+    globals()[CCruisers] = national_units.get("cruiser.").qty_conscript
+    Uboat='Uboat'+str(n)
+    globals()[Uboat] = national_units.get("uboat").qty
+    CUboat='CUboat'+str(n)
+    globals()[CUboat] = national_units.get("uboat").qty_conscript
+    TroopS='TroopS'+str(n)
+    globals()[TroopS] = national_units.get("troopship").qty
+    CTroopS='CTroopS'+str(n)
+    globals()[CTroopS] = national_units.get("troopship").qty_conscript
 
-        cons='cons'+str(n)
-        globals()[cons]=int(input("Conscripts ? [1]:yes [0]:no"))
-
-        if globals()[cons]==1:
-
-            CInf='CInf'+str(n)
-            globals()[CInf] = int(input("Conscript Infantrymen : "))
-            CTanks='CTanks'+str(n)
-            globals()[CTanks] = int(input("Conscript Tanks : "))
-            CAFV='CAFV'+str(n)
-            globals()[CAFV] = int(input("Conscript AFVs :"))
-            CAAA='CAAA'+str(n)
-            globals()[CAAA] = int(input("Conscript AAA cannons : "))
-            CFA='CFA'+str(n)
-            globals()[CFA] = int(input("Conscript FA cannons : "))
-            CFighter='CFighter'+str(n)
-            globals()[CFighter] = int(input("Conscript Fighters : "))
-            CBomber='CBomber'+str(n)
-            globals()[CBomber] = int(input("Conscript Bombers : "))
-
-        else :
-            
-            CInf='CInf'+str(n)
-            globals()[CInf] = 0
-            CTanks='CTanks'+str(n)
-            globals()[CTanks] = 0
-            CAFV='CAFV'+str(n)
-            globals()[CAFV] = 0
-            CAAA='CAAA'+str(n)
-            globals()[CAAA] = 0
-            CFA='CFA'+str(n)
-            globals()[CFA] = 0
-            CFighter='CFighter'+str(n)
-            globals()[CFighter] = 0
-            CBomber='CBomber'+str(n)
-            globals()[CBomber] = 0
-
-    if typ==2:
-
-        Inf='Inf'+str(n)
-        globals()[Inf] = 0
-        Tanks='Tanks'+str(n)
-        globals()[Tanks] = 0
-        AFV='AFV'+str(n)
-        globals()[AFV] = 0
-        AAA='AAA'+str(n)
-        globals()[AAA] = 0
-        FA='FA'+str(n)
-        globals()[FA] = 0
-        CInf='CInf'+str(n)
-        globals()[CInf] = 0
-        CTanks='CTanks'+str(n)
-        globals()[CTanks] = 0
-        CAFV='CAFV'+str(n)
-        globals()[CAFV] = 0
-        CAAA='CAAA'+str(n)
-        globals()[CAAA] = 0
-        CFA='CFA'+str(n)
-        globals()[CFA] = 0
-
-        BattleS='BattleS'+str(n)
-        globals()[BattleS] = int(input("Battleships : "))
-        Destroyer='Destroyers'+str(n)
-        globals()[Destroyer] = int(input("Destroyers : "))
-        Cruisers='Cruisers'+str(n)
-        globals()[Cruisers] = int(input("Cruisers :"))
-        Uboat='Uboat'+str(n)
-        globals()[Uboat] = int(input("Uboats : "))
-        TroopS='TroopS'+str(n)
-        globals()[TroopS] = int(input("Troopships : "))
-
-        coas=int(input("Coastal battle ? [1]:yes [0]:no"))
-
-        if coas==1:
-
-            Fighter='Fighter'+str(n)
-            globals()[Fighter] = int(input("Fighters : "))
-            Bomber='Bomber'+str(n)
-            globals()[Bomber] = int(input("Bombers : "))
-
-        else :
-            Fighter='Fighter'+str(n)
-            globals()[Fighter] = 0
-            Bomber='Bomber'+str(n)
-            globals()[Bomber] = 0
-
-        cons='cons'+str(n)
-        globals()[cons]=int(input("Conscripts ? [1]:yes [0]:no"))
-
-        if globals()[cons]==1:
-
-            CBattleS='CBattleS'+str(n)
-            globals()[CBattleS] = int(input("Conscript Battleships : "))
-            CDestroyer='CDestroyers'+str(n)
-            globals()[CDestroyer] = int(input("Conscript Destroyers : "))
-            CCruisers='CCruisers'+str(n)
-            globals()[CCruisers] = int(input("Conscript Cruisers :"))
-            CUboat='CUboat'+str(n)
-            globals()[CUboat] = int(input("Conscript Uboats : "))
-            CTroopS='CTroopS'+str(n)
-            globals()[CTroopS] = int(input("Conscript Troopships : "))
-
-            if coas==1:
-
-                CFighter='CFighter'+str(n)
-                globals()[CFighter] = int(input("Conscript Fighters : "))
-                CBomber='CBomber'+str(n)
-                globals()[CBomber] = int(input("Conscript Bombers : "))
-
-            else:
-
-                CFighter='CFighter'+str(n)
-                globals()[CFighter] = 0
-                CBomber='CBomber'+str(n)
-                globals()[CBomber] = 0
-        else:
-            
-            CBattleS='CBattleS'+str(n)
-            globals()[CBattleS] = 0
-            CDestroyer='CDestroyers'+str(n)
-            globals()[CDestroyer] = 0
-            CCruisers='CCruisers'+str(n)
-            globals()[CCruisers] = 0
-            CUboat='CUboat'+str(n)
-            globals()[CUboat] = 0
-            CTroopS='CTroopS'+str(n)
-            globals()[CTroopS] = 0
-            CFighter='CFighter'+str(n)
-            globals()[CFighter] = 0
-            CBomber='CBomber'+str(n)
-            globals()[CBomber] = 0
-        tr='tr'+str(n)
-        if (globals()[TroopS]+globals()[CTroopS])!=0:
-            globals()[tr]=round(int(input("Number of soldiers transported by troopships"))/(globals()[TroopS]+globals()[CTroopS]),0)
-        else:
-            globals()[tr]=0
+    tr='tr'+str(n)
+    if (globals()[TroopS]+globals()[CTroopS])!=0:
+        globals()[tr]=round(int(input("Number of soldiers transported by troopships"))/(globals()[TroopS]+globals()[CTroopS]),0)
+    else:
+        globals()[tr]=0
 
     print("Country stats :")
 
