@@ -15,20 +15,46 @@ UNIT_DATA_FILE = f"{pathlib.Path(__file__).parent}/units.csv"
 with open(UNIT_DATA_FILE) as f:
     UNIT_TYPES = tuple(load_unit_data(f))
 
-UnitQuantity = namedtuple("UnitQuantity", ["qty", "qty_conscript"])
+def army_strength(units, wage_factor, terrain_factor,
+                  entrenchment_factor, luck_factor, conscript_factor=1):
+    """
+    Compute the offensive and defensive score of an army.
 
-def score(t,tadv,tren,wag,wagc,mult,a,b,c,d,e,f,g,h,i,j,k,l,m,n):
-    if t==1:
-        scoreat=(mult*tadv*(wag*(a*5+b*15+c*8+e*25+f*12+g*20)+wagc*0.3*(h*5+i*15+j*8+l*25+m*12+n*20)))
-        scoredef=(mult*tadv*tren*(wag*(a*2+b*15+c*10+d*6+e*6)+wagc*0.3*(h*2+i*15+j*10+k*6+l*6)))
-        scoreairat=(mult*(wag*(d*15+f*12)+wagc*0.3*(k*15+m*12)))
-        scoreairdef=(mult*(wag*(f*8+g*10)+wagc*0.3*(m*8+n*10)))
-    if t==2:
-        scoreat=(mult*(wag*(a*60+b*40+c*45+d*50+e*10+f*0.5+g*20*1.5)+wagc*0.3*(h*60+i*40+j*45+k*50+l*10+m*0.5+n*20*1.5)))
-        scoredef=(mult*(wag*(a*60+b*30+c*45+d*30+e*30)+wagc*0.3*(h*60+i*30+j*45+k*30+l*30)))
-        scoreairat=(mult*(wag*(b*40*0.25+c*45*0.25+e*10*0.5+f*12)+wagc*0.3*(i*40*0.25+j*45*0.25+l*10*0.5+m*12)))
-        scoreairdef=(mult*(wag*(f*8+g*10)+wagc*0.3*(m*8+n*10)))
-    return[scoreat,scoredef,scoreairat,scoreairdef]
+    Wage, terrain advantage, entrenchment, a luck factor and a
+    conscription factor (default 1 ) are all taken into account.
+    Factors may not be 0, but resulting army strength may be.
+    """
+    # These checks could be redundant, but good to have just in case.
+    if wage_factor <= 0:
+        raise ValueError("Wage factor must be greater than 0.")
+    if terrain_factor <= 0:
+        raise ValueError("Terrain factor must be greater than 0.")
+    if entrenchment_factor <= 0:
+        raise ValueError("Entrenchment factor must be greater than 0.")
+    if luck_factor <= 0:
+        raise ValueError("Luck factor must be greater than 0.")
+    if conscript_factor <= 0:
+        raise ValueError("Conscript factor must be greater than 0.")
+
+    offense = 0
+    defense = 0
+    # Sum up base unit stats.
+    for name, qty in units.items():
+        # If we used the Unit as the key we wouldn't have to lookup.
+        for unit in UNIT_TYPES:
+            if unit.name == name:
+                offense += unit.attack * qty
+                defense += unit.defense * qty
+                break
+        else:
+            raise ValueError(f"Unit {name} not recognized!")
+
+    # Apply modifiers.
+    offense *= wage_factor * terrain_factor * luck_factor * conscript_factor
+    defense *= wage_factor * terrain_factor * entrenchment_factor * \
+               luck_factor * conscript_factor
+    return offense, defense
+
 def casualties(unit,scatW,scatL,scdefW,scdefL,status,casu,sn,mult,cons,typ,air):
     typm=typ-(typ/2)+air/2
     if air==1:
@@ -87,7 +113,22 @@ def casualties(unit,scatW,scatL,scdefW,scdefL,status,casu,sn,mult,cons,typ,air):
             casu[1]=casu[1]+round(deaths*mult*(deathDeath/100)+wounded*mult*(woundedDeath/100),0)
         print(remaining,'/',wounded,'/',deaths)
     return()
-    
+
+def filter_units(units, classes):
+    """
+    Filter units returning those in the specified classes.
+    """
+    filtered_units = {}
+    for name, qty in units.items():
+        for unit in UNIT_TYPES:
+            if unit.name == name:
+                if unit.unit_class in classes:
+                    filtered_units[name] = qty
+                break
+        else:
+            raise ValueError(f"Unit {name} not recognized!")
+    return filtered_units
+
 
 #DATA INPUT
 
@@ -111,7 +152,8 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
     print()
     globals()[teamname]= input("Name of the country : ")
 
-    national_units = defaultdict(lambda : UnitQuantity(0, 0))
+    professionals = defaultdict(int)
+    conscripts = defaultdict(int)
     allowed_classes = set()
 
     # Land battle
@@ -132,61 +174,60 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
     for unit in UNIT_TYPES:
         if unit.unit_class not in allowed_classes:
             continue
-        qty = input_positive_integer(f"{unit.name} : ")
-        qty_conscript = 0
+        professionals[unit.name] = input_positive_integer(f"{unit.name} : ")
         if globals()[cons] == 1:
-            qty_conscript = input_positive_integer(f"conscript {unit.name} : ")
-        national_units[unit.name] = UnitQuantity(qty, qty_conscript)
+            conscripts[unit.name] = input_positive_integer(
+                f"conscript {unit.name} : ")
 
     # Set all global variables for troop types. *insert woozy face emoji*
     Inf='Inf'+str(n)
-    globals()[Inf] = national_units["infantry"].qty
+    globals()[Inf] = professionals["infantry"]
     CInf='CInf'+str(n)
-    globals()[CInf] = national_units["infantry"].qty_conscript
+    globals()[CInf] = conscripts["infantry"]
     Tanks='Tanks'+str(n)
-    globals()[Tanks] = national_units["tank"].qty
+    globals()[Tanks] = professionals["tank"]
     CTanks='CTanks'+str(n)
-    globals()[CTanks] = national_units["tank"].qty_conscript
+    globals()[CTanks] = conscripts["tank"]
     AFV='AFV'+str(n)
-    globals()[AFV] = national_units["AFV"].qty
+    globals()[AFV] = professionals["AFV"]
     CAFV='CAFV'+str(n)
-    globals()[CAFV] = national_units["AFV"].qty_conscript
+    globals()[CAFV] = conscripts["AFV"]
     AAA='AAA'+str(n)
-    globals()[AAA] = national_units["AAA"].qty
+    globals()[AAA] = professionals["AAA"]
     CAAA='CAAA'+str(n)
-    globals()[CAAA] = national_units["AAA"].qty_conscript
+    globals()[CAAA] = conscripts["AAA"]
     FA='FA'+str(n)
-    globals()[FA] = national_units["FA"].qty
+    globals()[FA] = professionals["FA"]
     CFA='CFA'+str(n)
-    globals()[CFA] = national_units["FA"].qty_conscript
+    globals()[CFA] = conscripts["FA"]
     Fighter='Fighter'+str(n)
-    globals()[Fighter] = national_units["fighter"].qty
+    globals()[Fighter] = professionals["fighter"]
     CFighter='CFighter'+str(n)
-    globals()[CFighter] = national_units["fighter"].qty_conscript
+    globals()[CFighter] = conscripts["fighter"]
     Bomber='Bomber'+str(n)
-    globals()[Bomber] = national_units["bomber"].qty
+    globals()[Bomber] = professionals["bomber"]
     CBomber='CBomber'+str(n)
-    globals()[CBomber] = national_units["bomber"].qty_conscript
+    globals()[CBomber] = conscripts["bomber"]
     BattleS='BattleS'+str(n)
-    globals()[BattleS] = national_units["battleship"].qty
+    globals()[BattleS] = professionals["battleship"]
     CBattleS='CBattleS'+str(n)
-    globals()[CBattleS] =national_units["battleship"].qty_conscript
+    globals()[CBattleS] = conscripts["battleship"]
     Destroyer='Destroyer'+str(n)
-    globals()[Destroyer] = national_units["destroyer"].qty
+    globals()[Destroyer] = professionals["destroyer"]
     CDestroyer='CDestroyer'+str(n)
-    globals()[CDestroyer] = national_units["destroyer"].qty_conscript
+    globals()[CDestroyer] = conscripts["destroyer"]
     Cruisers='Cruisers'+str(n)
-    globals()[Cruisers] = national_units["cruiser"].qty
+    globals()[Cruisers] = professionals["cruiser"]
     CCruisers = 'CCruisers'+str(n)
-    globals()[CCruisers] = national_units["cruiser."].qty_conscript
+    globals()[CCruisers] = conscripts["cruiser"]
     Uboat='Uboat'+str(n)
-    globals()[Uboat] = national_units["uboat"].qty
+    globals()[Uboat] = professionals["uboat"]
     CUboat='CUboat'+str(n)
-    globals()[CUboat] = national_units["uboat"].qty_conscript
+    globals()[CUboat] = conscripts["uboat"]
     TroopS='TroopS'+str(n)
-    globals()[TroopS] = national_units["troopship"].qty
+    globals()[TroopS] = professionals["troopship"]
     CTroopS='CTroopS'+str(n)
-    globals()[CTroopS] = national_units["troopship"].qty_conscript
+    globals()[CTroopS] = conscripts["troopship"]
 
     tr='tr'+str(n)
     if (globals()[TroopS]+globals()[CTroopS])!=0:
@@ -264,17 +305,40 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
     globals()[TacticDef] = float(input("Defensive Tactic bonus : "))*(1+(globals()[GenDef])/20)
     Multi = 'Multi'+str(n)  
     globals()[Multi] = globals()[Supply]*globals()[Rese]*globals()[Luck]*globals()[Climate]*globals()[Terrain]*globals()[Morale]*globals()[Tired]*globals()[Part]*globals()[TacticOff]*globals()[TacticDef]
-    scoreteam=0
-    if typ==1:
-        scoreteam= score(1,globals()[Tadv],globals()[Entrench],globals()[Wage],globals()[CWage],globals()[Multi],globals()[Inf],globals()[Tanks],globals()[AFV],globals()[AAA],globals()[FA],globals()[Fighter],globals()[Bomber],globals()[CInf],globals()[CTanks],globals()[CAFV],globals()[CAAA],globals()[CFA],globals()[CFighter],globals()[CBomber])
-    if typ==2:
-        scoreteam= score(2,1,1,globals()[Wage],globals()[CWage],globals()[Multi],globals()[BattleS],globals()[Destroyer],globals()[Cruisers],globals()[Uboat],globals()[TroopS],globals()[Fighter],globals()[Bomber],globals()[CBattleS],globals()[CDestroyer],globals()[CCruisers],globals()[CUboat],globals()[CTroopS],globals()[CFighter],globals()[CBomber])
-    scoreat = scoreteam[0]+scoreteam[2]
-    scoredef = scoreteam[1]+scoreteam[3]
-    scoreairat = scoreteam[2]
-    scoreairdef = scoreteam[3]
+
+    prof_off, prof_def = army_strength(
+        units=filter_units(professionals, {"land", "naval"}),
+        wage_factor=globals()[Wage],
+        terrain_factor=globals()[Tadv],
+        entrenchment_factor=globals()[Entrench],
+        luck_factor=globals()[Multi])
+
+    conscript_off, conscript_def = army_strength(
+        units=filter_units(conscripts, {"land", "naval"}),
+        wage_factor=globals()[CWage],
+        terrain_factor=globals()[Tadv],
+        entrenchment_factor=globals()[Entrench],
+        luck_factor=globals()[Multi])
+
+    air_prof_off, air_prof_def = army_strength(
+        units=filter_units(professionals, {"air"}),
+        wage_factor=globals()[Wage],
+        terrain_factor=1,
+        entrenchment_factor=1,
+        luck_factor=globals()[Multi])
+
+    air_conscript_off, air_conscript_def = army_strength(
+        units=filter_units(conscripts, {"air"}),
+        wage_factor=globals()[Wage],
+        terrain_factor=1,
+        entrenchment_factor=1,
+        luck_factor=globals()[Multi])
+
     li.append([nsid,n])
-    return [scoreat,scoredef,scoreairat,scoreairdef]
+    return (prof_off + conscript_off + air_prof_off + air_conscript_off,
+            prof_def + conscript_def, + air_prof_def, + air_conscript_def,
+            air_prof_off + air_conscript_off,
+            air_prof_def + air_conscript_def)
 
 def casucount(a,b,c,d,e,f,g,i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,scdefWair,scdefLair,typ,pop):
     if a==Inf or a==CInf :
