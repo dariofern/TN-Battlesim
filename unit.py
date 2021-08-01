@@ -1,40 +1,11 @@
 #!/usr/bin/env python3
 
+from collections import namedtuple
 import csv
 
-class Unit:
-    _type = "unassigned"
+Unit = namedtuple("Unit", ("unit_class", "name", "defense", "attack"))
 
-    def __init__(self, name, def_power, atck_power):
-        self.name = name
-        self.defense = def_power
-        self.attack = atck_power
-
-    def __str__(self):
-        return f"<{self.name}, {self.defense}, {self.attack}>"
-
-    def __repr__(self):
-        return str(self)
-
-    def __hash__(self):
-        return hash(self.name + self._type)
-
-class LandUnit(Unit):
-    _type = "land"
-
-class NavalUnit(Unit):
-    _type = "naval"
-
-class AirUnit(Unit):
-    _type = "air"
-
-unit_classes = {
-    "land" : LandUnit,
-    "naval" : NavalUnit,
-    "air" : AirUnit,
-}
-
-def load_unit_data(unit_data_file):
+def load_unit_data(handle):
     """
     Loads data from CSV into a list of unit types.
 
@@ -42,11 +13,10 @@ def load_unit_data(unit_data_file):
     Unit Class, Unit Name, Defense, and Attack (order does not matter).
     """
     units = []
-    with open(unit_data_file) as f:
-        for row in csv.DictReader(f):
-            unit_class = row["Unit Class"]
-            units.append(unit_classes[unit_class](
-                row["Unit Name"], float(row["Defense"]), float(row["Attack"])))
+    for row in csv.DictReader(handle):
+        unit_class = row["Unit Class"]
+        units.append(Unit(row["Unit Class"], row["Unit Name"],
+                        float(row["Defense"]), float(row["Attack"])))
 
     return units
 
@@ -55,4 +25,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: ./unit.py <path_to_unit_data>")
     else:
-        print(load_unit_data(sys.argv[1]))
+        with open(sys.argv[1]) as f:
+            print(load_unit_data(f))
