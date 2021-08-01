@@ -318,7 +318,8 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
         wage_factor=globals()[CWage],
         terrain_factor=globals()[Tadv],
         entrenchment_factor=globals()[Entrench],
-        luck_factor=globals()[Multi])
+        luck_factor=globals()[Multi],
+        conscript_factor=0.3)
 
     air_prof_off, air_prof_def = army_strength(
         units=filter_units(professionals, {"air"}),
@@ -329,10 +330,11 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
 
     air_conscript_off, air_conscript_def = army_strength(
         units=filter_units(conscripts, {"air"}),
-        wage_factor=globals()[Wage],
+        wage_factor=globals()[CWage],
         terrain_factor=1,
         entrenchment_factor=1,
-        luck_factor=globals()[Multi])
+        luck_factor=globals()[Multi],
+        conscript_factor=0.3)
 
     li.append([nsid,n])
     return (prof_off + conscript_off + air_prof_off + air_conscript_off,
