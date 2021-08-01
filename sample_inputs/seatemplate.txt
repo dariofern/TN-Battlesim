@@ -1,0 +1,64 @@
+Done by Rainy :)
+**Type of battle [1]:land, [2]:sea :**
+**Land Battle Template:**
+
+Name of the first side : 
+# of Nations fighting for this side :
+Name of the country :
+Coastal battle? [1:yes, [0]:no :
+Conscripts? [1:yes, [0]:no :
+**[If yes, you will have to fill out # of conscript troop following each category
+EX: Battleship: 3
+EX: Conscript Battleship: 2]**
+fighter : 
+bomber : 
+battleship : 
+destroyer : 
+cruiser : 
+uboat : 
+troopship : 
+# of transported soldiers by troopships : 
+Military budget (without the $ and no commas) :
+Research budget (without the $ and no commas) : 
+Wage level (1-4) : 
+Conscript Wage level (1-4) : 
+Recent Battles (one year) : 
+Recent Battles lost (one year) : 
+Recent Battles won (one year) : 
+General's defense skills : 
+General's attack skills : 
+Offensive Tactic bonus : 
+Defensive Tactic bonus : 
+
+Name of the second side : 
+# of Nations fighting for this side :
+Name of the country :
+Coastal battle? [1:yes, [0]:no :
+Conscripts? [1:yes, [0]:no :
+**[If yes, you will have to fill out # of conscript troop following each category
+EX: Battleship: 3
+EX: Conscript Battleship: 2]**
+fighter : 
+bomber : 
+battleship : 
+destroyer : 
+cruiser : 
+uboat : 
+troopship : 
+# of transported soldiers by troopships : 
+Military budget (without the $ and no commas) :
+Research budget (without the $ and no commas) : 
+Wage level (1-4) : 
+Conscript Wage level (1-4) : 
+Recent Battles (one year) : 
+Recent Battles lost (one year) : 
+Recent Battles won (one year) : 
+General's defense skills : 
+General's attack skills : 
+Offensive Tactic bonus : 
+Defensive Tactic bonus : 
+Nearby population : 
+
+**DONE**
+Done by Rainy :)
+
