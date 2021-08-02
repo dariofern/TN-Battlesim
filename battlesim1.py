@@ -15,6 +15,22 @@ UNIT_DATA_FILE = f"{pathlib.Path(__file__).parent}/units.csv"
 with open(UNIT_DATA_FILE) as f:
     UNIT_TYPES = tuple(load_unit_data(f))
 
+# Need to be able to map names of globals to names of units during refactoring.
+global_names = {
+    "Inf" : "infantry",
+    "Tanks" : "tank",
+    "AFV" : "AFV",
+    "AAA" : "AAA",
+    "FA" : "FA",
+    "Fighter" : "fighter",
+    "Bomber" : "bomber",
+    "BattleS" : "battleship",
+    "Destroyer" : "destroyer",
+    "Cruisers" : "cruiser",
+    "Uboat" : "uboat",
+    "TroopS" : "troopship"
+}
+
 def army_strength(units, wage_factor, terrain_factor,
                   entrenchment_factor, luck_factor, conscript_factor=1):
     """
@@ -87,7 +103,7 @@ def casualties(unit,scatW,scatL,scdefW,scdefL,status,casu,sn,mult,cons,typ,air):
             deathWounded=random.randint(0,deathWounded)
             casu[0]=casu[0]+round(wounded*mult*woundedWounded/100+deaths*mult*deathWounded/100,0)
             casu[1]=casu[1]+round(deaths*mult*(deathDeath/100)+wounded*mult*(woundedDeath/100),0)
-        print(remaining,'/',wounded,'/',deaths)
+        return int(remaining), int(wounded), int(deaths)
     if status=='loser':
         p=(((scatW+scdefW)/(scatL+scdefL))**2)/1.35
         ld=d*(1+(p/2))
@@ -111,7 +127,7 @@ def casualties(unit,scatW,scatL,scdefW,scdefL,status,casu,sn,mult,cons,typ,air):
             deathWounded=random.randint(0,deathWounded)
             casu[0]=casu[0]+round(wounded*mult*woundedWounded/100+deaths*mult*deathWounded/100,0)
             casu[1]=casu[1]+round(deaths*mult*(deathDeath/100)+wounded*mult*(woundedDeath/100),0)
-        print(remaining,'/',wounded,'/',deaths)
+        return int(remaining), int(wounded), int(deaths)
     return()
 
 def filter_units(units, classes):
@@ -178,21 +194,6 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
         if globals()[cons] == 1:
             conscripts[unit.name] = input_positive_integer(
                 f"conscript {unit.name} : ")
-
-    global_names = {
-        "Inf" : "infantry",
-        "Tanks" : "tank",
-        "AFV" : "AFV",
-        "AAA" : "AAA",
-        "FA" : "FA",
-        "Fighter" : "fighter",
-        "Bomber" : "bomber",
-        "BattleS" : "battleship",
-        "Destroyer" : "destroyer",
-        "Cruisers" : "cruiser",
-        "Uboat" : "uboat",
-        "TroopS" : "troopship"
-    }
 
     for g_name, name in global_names.items():
         globals()[f"{g_name}{n}"] = professionals[name]
@@ -315,10 +316,10 @@ def casucount(a,b,c,d,e,f,g,i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,s
     if a==Inf or a==CInf :
         am=1
         if a==CInf:
-            namea="Conscripted Infantrymen"
+            namea="Conscript infantry"
             Consa=1.5
         if a==Inf :
-            namea="Infantrymen"
+            namea="Infantrymen\t"
             Consa=1
     else :
         am=850
@@ -326,7 +327,7 @@ def casucount(a,b,c,d,e,f,g,i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,s
             namea="Conscript Battleships"
             Consa=1.5
         if a==BattleS:
-            namea="Battleships"
+            namea="Battleships\t"
             Consa=1
             
     if b==Tanks or b==CTanks :
@@ -335,7 +336,7 @@ def casucount(a,b,c,d,e,f,g,i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,s
             nameb="Conscript Tanks"
             Consb=1.5
         if b==Tanks :
-            nameb="Tanks"
+            nameb="Tanks\t\t"
             Consb=1
     else :
         bm=450
@@ -343,16 +344,16 @@ def casucount(a,b,c,d,e,f,g,i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,s
             nameb="Conscript Destroyers"
             Consb=1.5
         if b==Destroyer :
-            nameb="Destroyers"
+            nameb="Destroyers\t"
             Consb=2
         
     if c==AFV or c==CAFV :
         cm=4
         if c==CAFV:
-            namec="Conscript AFVs"
+            namec="Conscript AFVs\t"
             Consc=1.5
         if c==AFV :
-            namec="AFVs"
+            namec="AFVs\t\t"
             Consc=1
     else :
         cm=600
@@ -360,7 +361,7 @@ def casucount(a,b,c,d,e,f,g,i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,s
             namec="Conscript Cruisers"
             Consc=1.5
         if c==Cruisers:
-            namec="Cruisers"
+            namec="Cruisers\t"
             Consc=1
         
     if d==AAA or d==CAAA:
@@ -369,7 +370,7 @@ def casucount(a,b,c,d,e,f,g,i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,s
             named="Conscript AAA cannons"
             Consd=1.5
         if d==AAA :
-            named="AAA cannons"
+            named="AAA cannons\t"
             Consd=1
     else :
         dm=50
@@ -377,7 +378,7 @@ def casucount(a,b,c,d,e,f,g,i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,s
             named="Conscript Uboats"
             Consd=3
         if d==Uboat :
-            named="Uboats"
+            named="Uboats\t"
             Consd=2
         
     if e==FA or e==CFA :
@@ -386,7 +387,7 @@ def casucount(a,b,c,d,e,f,g,i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,s
             namee="Conscript FA cannons"
             Conse=1.5
         if e==FA :
-            namee="FA cannons"
+            namee="FA cannons\t"
             Conse=1
     else :
         em=6+(globals()[tr])
@@ -394,21 +395,21 @@ def casucount(a,b,c,d,e,f,g,i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,s
             namee="Conscript Troopships"
             Conse=1.5
         if e==TroopS :
-            namee="Troopships"
+            namee="Troopships\t"
             Conse=1
 
     if f==CFighter:
         namef="Conscript Fighters"
         Consf=3
     if f==Fighter:
-        namef="Fighters"
+        namef="Fighters\t"
         Consf=2
 
     if g==CBomber:
         nameg="Conscript Bombers"
         Consg=3
     if g==Bomber:
-        nameg="Bombers"
+        nameg="Bombers\t"
         Consg=2
         
         
@@ -416,39 +417,44 @@ def casucount(a,b,c,d,e,f,g,i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,s
     print("------------------------------------------------------------------------")
     casualties1=[0,0]
     teamname='Team'+str(Listside[i][1])
+
+    print(f"Casualties for {globals()[teamname]}")
+    print(f"|Unit Type\t\t|Remaining\t|Wounded\t|Dead")
+
+    alive, wounded, dead = casualties(globals()[a],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,am,Consa,typ,0)
+    print(f" {namea}\t {alive}\t\t {wounded}\t\t {dead}")
     
-    print(str(globals()[teamname]),"'s",namea," remaining / wounded(damaged if battleship) / dead(destroyed if battleship):",end=' ')
-    print(casualties(globals()[a],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,am,Consa,typ,0))
+    alive, wounded, dead = casualties(globals()[b],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,bm,Consb,typ,0)
+    print(f" {nameb}\t {alive}\t\t {wounded}\t\t {dead}")
+
+    alive, wounded, dead =casualties(globals()[c],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,cm,Consc,typ,0)
+    print(f" {namec}\t {alive}\t\t {wounded}\t\t {dead}")
+
+    alive, wounded, dead = casualties(globals()[d],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,dm,Consd,typ,0)
+    print(f" {named}\t {alive}\t\t {wounded}\t\t {dead}")
     
-    print(str(globals()[teamname]),"'s",nameb," remaining / damaged / destroyed:",end=' ')
-    print(casualties(globals()[b],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,bm,Consb,typ,0))
-    
-    print(str(globals()[teamname]),"'s",namec," remaining / damaged / destroyed:",end=' ')
-    print(casualties(globals()[c],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,cm,Consc,typ,0))
-    
-    print(str(globals()[teamname]),"'s",named," remaining / damaged / destroyed:",end=' ')
-    print(casualties(globals()[d],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,dm,Consd,typ,0))
-    
-    print(str(globals()[teamname]),"'s",namee," remaining / damaged / destroyed:",end=' ')
-    print(casualties(globals()[e],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,em,Conse,typ,0))
+    alive, wounded, dead = casualties(globals()[e],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,em,Conse,typ,0)
+    print(f" {namee}\t {alive}\t\t {wounded}\t\t {dead}")
 
     if (s=='winner' and scdefWair!=0 and scatLair==0) or (s=='loser' and scdefLair!=0 and scatWair==0):
         
-        print(str(globals()[teamname]),"'s",namef," remaining / damaged / destroyed:",end=' ')
-        print(globals()[f],'/ 0 / 0')
+        alive, wounded, dead = globals()[f], 0, 0
+        print(f" {namef}\t {alive}\t\t {wounded}\t\t {dead}")
+
         print()
         
-        print(str(globals()[teamname]),"'s",nameg," remaining / damaged / destroyed:",end=' ')
-        print(globals()[g],'/ 0 /0')
+        alive, wounded, dead = globals()[g], 0, 0
+        print(f" {nameg}\t {alive}\t\t {wounded}\t\t {dead}")
+
         print()
         
     if (s=='winner' and scdefWair!=0 and scatLair!=0) or (s=='loser' and scdefLair!=0 and scatWair!=0) :
             
-        print(str(globals()[teamname]),"'s",namef," remaining / damaged / destroyed:",end=' ')
-        print(casualties(globals()[f],scatWair,scatLair,scdefWair,scdefLair,s,casualties1,sidenat1,1,Consf,1,1))
+        alive, wounded, dead = casualties(globals()[f],scatWair,scatLair,scdefWair,scdefLair,s,casualties1,sidenat1,1,Consf,1,1)
+        print(f" {namef}\t {alive}\t\t {wounded}\t\t {dead}")
     
-        print(str(globals()[teamname]),"'s",nameg," remaining / damaged / destroyed:",end=' ')
-        print(casualties(globals()[g],scatWair,scatLair,scdefWair,scdefLair,s,casualties1,sidenat1,3,Consg,1,1))
+        alive, wounded, dead = casualties(globals()[g],scatWair,scatLair,scdefWair,scdefLair,s,casualties1,sidenat1,3,Consg,1,1)
+        print(f" {nameg}\t {alive}\t\t {wounded}\t\t {dead}")
           
     print("Casualties (wounded/dead):",casualties1)
     pop=round(pop*(((casualties1[0]+casualties1[1])/(pop+1))/10),0)
