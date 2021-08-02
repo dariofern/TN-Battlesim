@@ -3,7 +3,14 @@
 from collections import namedtuple
 import csv
 
-Unit = namedtuple("Unit", ("unit_class", "name", "defense", "attack"))
+Unit = namedtuple("Unit", (
+    "unit_class",
+    "name",
+    "defense",
+    "attack",
+    "crew",
+    "causualty_factor",
+    "conscript_casualty_factor"))
 
 def load_unit_data(handle):
     """
@@ -15,8 +22,14 @@ def load_unit_data(handle):
     units = []
     for row in csv.DictReader(handle):
         unit_class = row["Unit Class"]
-        units.append(Unit(row["Unit Class"], row["Unit Name"],
-                        float(row["Defense"]), float(row["Attack"])))
+        units.append(Unit(
+            row["Unit Class"],
+            row["Unit Name"],
+            float(row["Defense"]),
+            float(row["Attack"]),
+            float(row["Personnel"]),
+            float(row["Casualty Factor"]),
+            float(row["Conscript Casualty Factor"])))
 
     return units
 
