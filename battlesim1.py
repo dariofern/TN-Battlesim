@@ -51,8 +51,8 @@ def army_strength(units, wage_factor, terrain_factor,
 
     # Apply modifiers.
     offense *= wage_factor * terrain_factor * luck_factor * conscript_factor
-    defense *= wage_factor * terrain_factor * entrenchment_factor * \
-               luck_factor * conscript_factor
+    defense *= (wage_factor * terrain_factor * entrenchment_factor *
+               luck_factor * conscript_factor)
     return offense, defense
 
 def casualties(unit,scatW,scatL,scdefW,scdefL,status,casu,sn,mult,cons,typ,air):
@@ -179,58 +179,27 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
             conscripts[unit.name] = input_positive_integer(
                 f"conscript {unit.name} : ")
 
-    # Set all global variables for troop types. *insert woozy face emoji*
-    Inf='Inf'+str(n)
-    globals()[Inf] = professionals["infantry"]
-    CInf='CInf'+str(n)
-    globals()[CInf] = conscripts["infantry"]
-    Tanks='Tanks'+str(n)
-    globals()[Tanks] = professionals["tank"]
-    CTanks='CTanks'+str(n)
-    globals()[CTanks] = conscripts["tank"]
-    AFV='AFV'+str(n)
-    globals()[AFV] = professionals["AFV"]
-    CAFV='CAFV'+str(n)
-    globals()[CAFV] = conscripts["AFV"]
-    AAA='AAA'+str(n)
-    globals()[AAA] = professionals["AAA"]
-    CAAA='CAAA'+str(n)
-    globals()[CAAA] = conscripts["AAA"]
-    FA='FA'+str(n)
-    globals()[FA] = professionals["FA"]
-    CFA='CFA'+str(n)
-    globals()[CFA] = conscripts["FA"]
-    Fighter='Fighter'+str(n)
-    globals()[Fighter] = professionals["fighter"]
-    CFighter='CFighter'+str(n)
-    globals()[CFighter] = conscripts["fighter"]
-    Bomber='Bomber'+str(n)
-    globals()[Bomber] = professionals["bomber"]
-    CBomber='CBomber'+str(n)
-    globals()[CBomber] = conscripts["bomber"]
-    BattleS='BattleS'+str(n)
-    globals()[BattleS] = professionals["battleship"]
-    CBattleS='CBattleS'+str(n)
-    globals()[CBattleS] = conscripts["battleship"]
-    Destroyer='Destroyer'+str(n)
-    globals()[Destroyer] = professionals["destroyer"]
-    CDestroyer='CDestroyer'+str(n)
-    globals()[CDestroyer] = conscripts["destroyer"]
-    Cruisers='Cruisers'+str(n)
-    globals()[Cruisers] = professionals["cruiser"]
-    CCruisers = 'CCruisers'+str(n)
-    globals()[CCruisers] = conscripts["cruiser"]
-    Uboat='Uboat'+str(n)
-    globals()[Uboat] = professionals["uboat"]
-    CUboat='CUboat'+str(n)
-    globals()[CUboat] = conscripts["uboat"]
-    TroopS='TroopS'+str(n)
-    globals()[TroopS] = professionals["troopship"]
-    CTroopS='CTroopS'+str(n)
-    globals()[CTroopS] = conscripts["troopship"]
+    global_names = {
+        "Inf" : "infantry",
+        "Tanks" : "tank",
+        "AFV" : "AFV",
+        "AAA" : "AAA",
+        "FA" : "FA",
+        "Fighter" : "fighter",
+        "Bomber" : "bomber",
+        "BattleS" : "battleship",
+        "Destroyer" : "destroyer",
+        "Cruisers" : "cruiser",
+        "Uboat" : "uboat",
+        "TroopS" : "troopship"
+    }
+
+    for g_name, name in global_names.items():
+        globals()[f"{g_name}{n}"] = professionals[name]
+        globals()[f"C{g_name}{n}"] = conscripts[name]
 
     tr='tr'+str(n)
-    if (globals()[TroopS]+globals()[CTroopS])!=0:
+    if (globals()[f"TroopS{n}"]+globals()[f"CTroopS{n}"])!=0:
         globals()[tr]=round(int(input("Number of soldiers transported by troopships"))/(globals()[TroopS]+globals()[CTroopS]),0)
     else:
         globals()[tr]=0
@@ -623,6 +592,7 @@ def who_knows_what_this_even_does(side, win, loss):
     
 if Scoreside1<Scoreside2 :
     who_knows_what_this_even_does(Side1, 1, 2)
-else:
+elif Scoreside2>Scoreside1:
     who_knows_what_this_even_does(Side2, 2, 1)
-            
+else:
+    print("Unhandled draw.")
