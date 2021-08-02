@@ -1,13 +1,13 @@
-Unit Class,Unit Name,Defense,Attack
-land,infantry,2,5
-land,tank,15,15
-land,AFV,10,8
-land,AAA,6,15
-land,FA,6,25
-air,fighter,8,12
-air,bomber,10,20
-naval,battleship,60,60
-naval,destroyer,30,40
-naval,cruiser,45,45
-naval,uboat,30,50
-naval,troopship,30,10
+Unit Class,Unit Name,Defense,Attack,Personnel,Casualty Factor,Conscript Casualty Factor
+land,infantry,2,5,1,1,1.5
+land,tank,15,15,5,1,1.5
+land,AFV,10,8,4,1,1.5
+land,AAA,6,15,3,1,1.5
+land,FA,6,25,3,1,1.5
+air,fighter,8,12,1,2,3
+air,bomber,10,20,3,2,3
+naval,battleship,60,60,850,1,1.5
+naval,destroyer,30,40,450,1,1.5
+naval,cruiser,45,45,600,1,1.5
+naval,uboat,30,50,50,2,3
+naval,troopship,30,10,6,1,1.5
