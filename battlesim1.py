@@ -31,20 +31,7 @@ global_names = {
     "TroopS" : "troopship"
 }
 
-global_names_reversed = {
-    "infantry" : "Inf",
-    "tank" : "Tanks",
-    "AFV" : "AFV",
-    "AAA" : "AAA",
-    "FA" : "FA",
-    "fighter" : "Fighter",
-    "bomber" : "Bomber",
-    "battleship" : "BattleS",
-    "destroyer" : "Destroyer",
-    "cruiser" : "Cruisers",
-    "uboat" : "Uboat",
-    "troopship" : "TroopS"
-}
+global_names_reversed = dict(zip(global_names.values(), global_names.keys()))
 
 def get_unit(name):
     """
