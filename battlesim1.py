@@ -32,6 +32,7 @@ global_names = {
 }
 
 class Army:
+    """ Represents a group of units and their corresponding numbers. """
 
     both_factors = frozenset([
         "budget_factor",
@@ -100,6 +101,50 @@ class Army:
 
         return offense, defense
 
+    def casu(self, is_conscripts, i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,scdefWair,scdefLair,typ,pop):
+        """
+        Compute three new armies of alive, damaged, and dead units.
+        """
+
+        alive = {}
+        wounded = {}
+        dead = {}
+
+        for unit in self.units:
+            # Name of global containing name of global.
+            g_name_name = globals()[global_names[f"{unit.name}"]]
+
+            if is_conscripts:
+                g_name = globals()[f"C{g_name_name}"]
+                casualty_factor = unit.conscript_casualty_factor
+            else:
+                g_name = globals()[g_name_name]
+                casualty_factor = unit.casualty_factor
+
+            # Troopship crew is the base number plus however many troops
+            # it is carrying.
+            if unit.name == "troopship" and tr != 0:
+                crew = unit.crew + globals()[tr]
+            else:
+                crew = unit.crew
+
+            if unit.unit_class != "air":
+                alive, wounded, dead = Army.casualties(g_name,scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,casualty_factor,crew,typ,0)
+            # Air troops get away free under these obscure, unreadable conditions.
+            elif unit.unit_class == "air" and (s=='winner' and scdefWair!=0 and scatLair==0) or (s=='loser' and scdefLair!=0 and scatWair==0):
+                alive, wounded, dead = globals()[g_name], 0, 0
+            elif unit.unit_class == "air" and (s=='winner' and scdefWair!=0 and scatLair!=0) or (s=='loser' and scdefLair!=0 and scatWair!=0) :
+                alive, wounded, dead = Army.casualties(g_name,scatWair,scatLair,scdefWair,scdefLair,s,casualties1,sidenat1,1,crew,1,1)
+            else:
+                # Unit type not handled?
+                continue
+
+            alive[unit] = alive
+            wounded[unit] = wounded
+            dead[unit] = dead
+
+        return alive, wounded, dead
+
     # Staticmethod until we can refactor this so it uses its own unit stats.
     @staticmethod
     def casualties(unit,scatW,scatL,scdefW,scdefL,status,casu,sn,mult,cons,typ,air):
@@ -162,7 +207,6 @@ def filter_units(units, classes):
             filtered_units[unit] = qty
 
     return filtered_units
-
 
 #DATA INPUT
 
@@ -363,7 +407,7 @@ def casucount(is_conscripts, i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,
             elif unit.unit_class == "air" and (s=='winner' and scdefWair!=0 and scatLair==0) or (s=='loser' and scdefLair!=0 and scatWair==0):
                 alive, wounded, dead = globals()[g_name], 0, 0
             elif unit.unit_class == "air" and (s=='winner' and scdefWair!=0 and scatLair!=0) or (s=='loser' and scdefLair!=0 and scatWair!=0) :
-                alive, wounded, dead = Army.casualties(globals()[g_name],scatWair,scatLair,scdefWair,scdefLair,s,casualties1,sidenat1,1,Consf,1,1)
+                alive, wounded, dead = Army.casualties(g_name,scatWair,scatLair,scdefWair,scdefLair,s,casualties1,sidenat1,1,crew,1,1)
             else:
                 # Unit type not handled?
                 continue
