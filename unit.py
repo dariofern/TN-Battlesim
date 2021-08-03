@@ -9,7 +9,7 @@ Unit = namedtuple("Unit", (
     "defense",
     "attack",
     "crew",
-    "causualty_factor",
+    "casualty_factor",
     "conscript_casualty_factor"))
 
 def load_unit_data(handle):

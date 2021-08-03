@@ -15,6 +15,36 @@ UNIT_DATA_FILE = f"{pathlib.Path(__file__).parent}/units.csv"
 with open(UNIT_DATA_FILE) as f:
     UNIT_TYPES = tuple(load_unit_data(f))
 
+# Need to be able to map names of globals to names of units during refactoring.
+global_names = {
+    "Inf" : "infantry",
+    "Tanks" : "tank",
+    "AFV" : "AFV",
+    "AAA" : "AAA",
+    "FA" : "FA",
+    "Fighter" : "fighter",
+    "Bomber" : "bomber",
+    "BattleS" : "battleship",
+    "Destroyer" : "destroyer",
+    "Cruisers" : "cruiser",
+    "Uboat" : "uboat",
+    "TroopS" : "troopship"
+}
+
+global_names_reversed = dict(zip(global_names.values(), global_names.keys()))
+
+def get_unit(name):
+    """
+    Helper function to get Unit from its name.
+
+    We only need this until we get rid of the globals.
+    """
+    for unit in UNIT_TYPES:
+        if unit.name == name:
+            return unit
+
+    raise ValueError(f"Unit {name} not recognized!")
+
 def army_strength(units, wage_factor, terrain_factor,
                   entrenchment_factor, luck_factor, conscript_factor=1):
     """
@@ -40,14 +70,10 @@ def army_strength(units, wage_factor, terrain_factor,
     defense = 0
     # Sum up base unit stats.
     for name, qty in units.items():
-        # If we used the Unit as the key we wouldn't have to lookup.
-        for unit in UNIT_TYPES:
-            if unit.name == name:
-                offense += unit.attack * qty
-                defense += unit.defense * qty
-                break
-        else:
-            raise ValueError(f"Unit {name} not recognized!")
+        unit = get_unit(name)
+        offense += unit.attack * qty
+        defense += unit.defense * qty
+
 
     # Apply modifiers.
     offense *= wage_factor * terrain_factor * luck_factor * conscript_factor
@@ -87,7 +113,7 @@ def casualties(unit,scatW,scatL,scdefW,scdefL,status,casu,sn,mult,cons,typ,air):
             deathWounded=random.randint(0,deathWounded)
             casu[0]=casu[0]+round(wounded*mult*woundedWounded/100+deaths*mult*deathWounded/100,0)
             casu[1]=casu[1]+round(deaths*mult*(deathDeath/100)+wounded*mult*(woundedDeath/100),0)
-        print(remaining,'/',wounded,'/',deaths)
+        return int(remaining), int(wounded), int(deaths)
     if status=='loser':
         p=(((scatW+scdefW)/(scatL+scdefL))**2)/1.35
         ld=d*(1+(p/2))
@@ -111,7 +137,7 @@ def casualties(unit,scatW,scatL,scdefW,scdefL,status,casu,sn,mult,cons,typ,air):
             deathWounded=random.randint(0,deathWounded)
             casu[0]=casu[0]+round(wounded*mult*woundedWounded/100+deaths*mult*deathWounded/100,0)
             casu[1]=casu[1]+round(deaths*mult*(deathDeath/100)+wounded*mult*(woundedDeath/100),0)
-        print(remaining,'/',wounded,'/',deaths)
+        return int(remaining), int(wounded), int(deaths)
     return()
 
 def filter_units(units, classes):
@@ -178,21 +204,6 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
         if globals()[cons] == 1:
             conscripts[unit.name] = input_positive_integer(
                 f"conscript {unit.name} : ")
-
-    global_names = {
-        "Inf" : "infantry",
-        "Tanks" : "tank",
-        "AFV" : "AFV",
-        "AAA" : "AAA",
-        "FA" : "FA",
-        "Fighter" : "fighter",
-        "Bomber" : "bomber",
-        "BattleS" : "battleship",
-        "Destroyer" : "destroyer",
-        "Cruisers" : "cruiser",
-        "Uboat" : "uboat",
-        "TroopS" : "troopship"
-    }
 
     for g_name, name in global_names.items():
         globals()[f"{g_name}{n}"] = professionals[name]
@@ -311,145 +322,58 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
             air_prof_off + air_conscript_off,
             air_prof_def + air_conscript_def)
 
-def casucount(a,b,c,d,e,f,g,i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,scdefWair,scdefLair,typ,pop):
-    if a==Inf or a==CInf :
-        am=1
-        if a==CInf:
-            namea="Conscripted Infantrymen"
-            Consa=1.5
-        if a==Inf :
-            namea="Infantrymen"
-            Consa=1
-    else :
-        am=850
-        if a==CBattleS:
-            namea="Conscript Battleships"
-            Consa=1.5
-        if a==BattleS:
-            namea="Battleships"
-            Consa=1
-            
-    if b==Tanks or b==CTanks :
-        bm=5
-        if b==CTanks :
-            nameb="Conscript Tanks"
-            Consb=1.5
-        if b==Tanks :
-            nameb="Tanks"
-            Consb=1
-    else :
-        bm=450
-        if b==CDestroyer:
-            nameb="Conscript Destroyers"
-            Consb=1.5
-        if b==Destroyer :
-            nameb="Destroyers"
-            Consb=2
-        
-    if c==AFV or c==CAFV :
-        cm=4
-        if c==CAFV:
-            namec="Conscript AFVs"
-            Consc=1.5
-        if c==AFV :
-            namec="AFVs"
-            Consc=1
-    else :
-        cm=600
-        if c==CCruisers:
-            namec="Conscript Cruisers"
-            Consc=1.5
-        if c==Cruisers:
-            namec="Cruisers"
-            Consc=1
-        
-    if d==AAA or d==CAAA:
-        dm=3
-        if d==CAAA:
-            named="Conscript AAA cannons"
-            Consd=1.5
-        if d==AAA :
-            named="AAA cannons"
-            Consd=1
-    else :
-        dm=50
-        if d==CUboat :
-            named="Conscript Uboats"
-            Consd=3
-        if d==Uboat :
-            named="Uboats"
-            Consd=2
-        
-    if e==FA or e==CFA :
-        em=3
-        if e==CFA:
-            namee="Conscript FA cannons"
-            Conse=1.5
-        if e==FA :
-            namee="FA cannons"
-            Conse=1
-    else :
-        em=6+(globals()[tr])
-        if e==CTroopS:
-            namee="Conscript Troopships"
-            Conse=1.5
-        if e==TroopS :
-            namee="Troopships"
-            Conse=1
-
-    if f==CFighter:
-        namef="Conscript Fighters"
-        Consf=3
-    if f==Fighter:
-        namef="Fighters"
-        Consf=2
-
-    if g==CBomber:
-        nameg="Conscript Bombers"
-        Consg=3
-    if g==Bomber:
-        nameg="Bombers"
-        Consg=2
-        
-        
-    
+def casucount(is_conscripts, i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,scdefWair,scdefLair,typ,pop):
     print("------------------------------------------------------------------------")
     casualties1=[0,0]
     teamname='Team'+str(Listside[i][1])
-    
-    print(str(globals()[teamname]),"'s",namea," remaining / wounded(damaged if battleship) / dead(destroyed if battleship):",end=' ')
-    print(casualties(globals()[a],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,am,Consa,typ,0))
-    
-    print(str(globals()[teamname]),"'s",nameb," remaining / damaged / destroyed:",end=' ')
-    print(casualties(globals()[b],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,bm,Consb,typ,0))
-    
-    print(str(globals()[teamname]),"'s",namec," remaining / damaged / destroyed:",end=' ')
-    print(casualties(globals()[c],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,cm,Consc,typ,0))
-    
-    print(str(globals()[teamname]),"'s",named," remaining / damaged / destroyed:",end=' ')
-    print(casualties(globals()[d],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,dm,Consd,typ,0))
-    
-    print(str(globals()[teamname]),"'s",namee," remaining / damaged / destroyed:",end=' ')
-    print(casualties(globals()[e],scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,em,Conse,typ,0))
 
-    if (s=='winner' and scdefWair!=0 and scatLair==0) or (s=='loser' and scdefLair!=0 and scatWair==0):
-        
-        print(str(globals()[teamname]),"'s",namef," remaining / damaged / destroyed:",end=' ')
-        print(globals()[f],'/ 0 / 0')
-        print()
-        
-        print(str(globals()[teamname]),"'s",nameg," remaining / damaged / destroyed:",end=' ')
-        print(globals()[g],'/ 0 /0')
-        print()
-        
-    if (s=='winner' and scdefWair!=0 and scatLair!=0) or (s=='loser' and scdefLair!=0 and scatWair!=0) :
-            
-        print(str(globals()[teamname]),"'s",namef," remaining / damaged / destroyed:",end=' ')
-        print(casualties(globals()[f],scatWair,scatLair,scdefWair,scdefLair,s,casualties1,sidenat1,1,Consf,1,1))
-    
-        print(str(globals()[teamname]),"'s",nameg," remaining / damaged / destroyed:",end=' ')
-        print(casualties(globals()[g],scatWair,scatLair,scdefWair,scdefLair,s,casualties1,sidenat1,3,Consg,1,1))
-          
+    print(f"Casualties for {globals()[teamname]}")
+    print(f"|Unit Type\t\t|Remaining\t|Wounded\t|Dead")
+
+    for unit in UNIT_TYPES:
+        # Name of global containing name of global.
+        g_name_name = globals()[global_names_reversed[f"{unit.name}"]]
+
+        try:
+            if is_conscripts:
+                g_name = globals()[f"C{g_name_name}"]
+                casualty_factor = unit.conscript_casualty_factor
+            else:
+                g_name = globals()[g_name_name]
+                casualty_factor = unit.casualty_factor
+        except KeyError:
+            # Unit is not in use in this battle.
+            continue
+
+        # Troopship crew is the base number plus however many troops
+        # it is carrying.
+        if unit.name == "troopship" and tr != 0:
+            crew = unit.crew + globals()[tr]
+        else:
+            crew = unit.crew
+
+        try:
+            if unit.unit_class != "air":
+                alive, wounded, dead = casualties(g_name,scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,casualty_factor,crew,typ,0)
+            # Air troops get away free under these obscure, unreadable conditions.
+            elif unit.unit_class == "air" and (s=='winner' and scdefWair!=0 and scatLair==0) or (s=='loser' and scdefLair!=0 and scatWair==0):
+                alive, wounded, dead = globals()[g_name], 0, 0
+            elif unit.unit_class == "air" and (s=='winner' and scdefWair!=0 and scatLair!=0) or (s=='loser' and scdefLair!=0 and scatWair!=0) :
+                alive, wounded, dead = casualties(globals()[g_name],scatWair,scatLair,scdefWair,scdefLair,s,casualties1,sidenat1,1,Consf,1,1)
+            else:
+                # Unit type not handled?
+                continue
+        except KeyError:
+            # Hopefully unit not handled.
+            continue
+        # 20 was chosen arbitrarily.
+        conscript_str = ""
+        if is_conscripts:
+            conscript_str = "conscript "
+        print_name = conscript_str + unit.name
+        padding = ' ' * (20 - len(print_name))
+        print(f" {print_name + padding}\t {alive}\t\t {wounded}\t\t {dead}")
+
     print("Casualties (wounded/dead):",casualties1)
     pop=round(pop*(((casualties1[0]+casualties1[1])/(pop+1))/10),0)
     print("------------------------------------------------------------------------")
@@ -509,82 +433,66 @@ def who_knows_what_this_even_does(side, win, loss):
     global CBomber
     global BattleS
     global CBattleS
+    global Destroyer
+    global CDestroyer
+    global Cruisers
+    global CCruisers
+    global Uboat
+    global CUboat
+    global TroopS
+    global CTroopS
+    global tr
     print()
     print(str(side)," won the battle!")
     Listside.sort()
     for i in range (0,number-1):
+        Inf='Inf'+str(Listside[i][1])
+        Tanks='Tanks'+str(Listside[i][1])
+        AFV='AFV'+str(Listside[i][1])
+        AAA='AAA'+str(Listside[i][1])
+        FA='FA'+str(Listside[i][1])
+        Fighter='Fighter'+str(Listside[i][1])
+        Bomber='Bomber'+str(Listside[i][1])
+        CInf='CInf'+str(Listside[i][1])
+        CTanks='CTanks'+str(Listside[i][1])
+        CAFV='CAFV'+str(Listside[i][1])
+        CAAA='CAAA'+str(Listside[i][1])
+        CFA='CFA'+str(Listside[i][1])
+        CFighter='CFighter'+str(Listside[i][1])
+        CBomber='CBomber'+str(Listside[i][1])
+        tr='tr'+str(Listside[i][1])
+        BattleS='BattleS'+str(Listside[i][1])
+        Destroyer='Destroyers'+str(Listside[i][1])
+        Cruisers='Cruisers'+str(Listside[i][1])
+        Uboat='Uboat'+str(Listside[i][1])
+        TroopS='TroopS'+str(Listside[i][1])
+        CBattleS='BattleS'+str(Listside[i][1])
+        CDestroyer='Destroyers'+str(Listside[i][1])
+        CCruisers='Cruisers'+str(Listside[i][1])
+        CUboat='Uboat'+str(Listside[i][1])
+        CTroopS='TroopS'+str(Listside[i][1])
         if Listside[i][0] == win:
-            Inf='Inf'+str(Listside[i][1])
-            Tanks='Tanks'+str(Listside[i][1])
-            AFV='AFV'+str(Listside[i][1])
-            AAA='AAA'+str(Listside[i][1])
-            FA='FA'+str(Listside[i][1])
-            Fighter='Fighter'+str(Listside[i][1])
-            Bomber='Bomber'+str(Listside[i][1])
-            CInf='CInf'+str(Listside[i][1])
-            CTanks='CTanks'+str(Listside[i][1])
-            CAFV='CAFV'+str(Listside[i][1])
-            CAAA='CAAA'+str(Listside[i][1])
-            CFA='CFA'+str(Listside[i][1])
-            CFighter='CFighter'+str(Listside[i][1])
-            CBomber='CBomber'+str(Listside[i][1])
             if typ==1:
-                populationcity=populationcity+casucount(Inf,Tanks,AFV,AAA,FA,Fighter,Bomber,i,"winner",0,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,1,populationcity)
+                populationcity=populationcity+casucount(False, i,"winner",0,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,1,populationcity)
                 cons='cons'+str(Listside[i][1])
                 if globals()[cons]==1:
-                    populationcity=populationcity+casucount(CInf,CTanks,CAFV,CAAA,CFA,CFighter,CBomber,i,"winner",0,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,1,populationcity)
+                    populationcity=populationcity+casucount(True, i,"winner",0,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,1,populationcity)
             if typ==2:
-                tr='tr'+str(Listside[i][1])
-                BattleS='BattleS'+str(Listside[i][1])
-                Destroyer='Destroyers'+str(Listside[i][1])
-                Cruisers='Cruisers'+str(Listside[i][1])
-                Uboat='Uboat'+str(Listside[i][1])
-                TroopS='TroopS'+str(Listside[i][1])
-                CBattleS='BattleS'+str(Listside[i][1])
-                CDestroyer='Destroyers'+str(Listside[i][1])
-                CCruisers='Cruisers'+str(Listside[i][1])
-                CUboat='Uboat'+str(Listside[i][1])
-                CTroopS='TroopS'+str(Listside[i][1])
-                populationcity=populationcity+casucount(BattleS,Destroyer,Cruisers,Uboat,TroopS,Fighter,Bomber,i,"winner",tr,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,2,populationcity)
+                populationcity=populationcity+casucount(False, i, "winner",tr,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,2,populationcity)
                 cons='cons'+str(Listside[i][1])
                 if globals()[cons]==1:
-                    populationcity=populationcity+casucount(CBattleS,CDestroyer,CCruisers,CUboat,CTroopS,CFighter,CBomber,i,"winner",tr,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,2,populationcity)
+                    populationcity=populationcity+casucount(True, i,"winner",tr,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,2,populationcity)
         if Listside[i][0] == loss:
-            Inf='Inf'+str(Listside[i][1])
-            Tanks='Tanks'+str(Listside[i][1])
-            AFV='AFV'+str(Listside[i][1])
-            AAA='AAA'+str(Listside[i][1])
-            FA='FA'+str(Listside[i][1])
-            Fighter='Fighter'+str(Listside[i][1])
-            Bomber='Bomber'+str(Listside[i][1])
-            CInf='CInf'+str(Listside[i][1])
-            CTanks='CTanks'+str(Listside[i][1])
-            CAFV='CAFV'+str(Listside[i][1])
-            CAAA='CAAA'+str(Listside[i][1])
-            CFA='CFA'+str(Listside[i][1])
-            CFighter='CFighter'+str(Listside[i][1])
-            CBomber='CBomber'+str(Listside[i][1])
             if typ==1:
-                populationcity=populationcity+casucount(Inf,Tanks,AFV,AAA,FA,Fighter,Bomber,i,"loser",0,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,1,populationcity)
+                populationcity=populationcity+casucount(False, i,"loser",0,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,1,populationcity)
                 cons='cons'+str(Listside[i][1])
                 if globals()[cons]==1:
-                    populationcity=populationcity+casucount(CInf,CTanks,CAFV,CAAA,CFA,CFighter,CBomber,i,"loser",0,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,1,populationcity)
+                    populationcity=populationcity+casucount(True, i,"loser",0,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,1,populationcity)
             if typ==2:
-                tr='tr'+str(Listside[i][1])
-                BattleS='BattleS'+str(Listside[i][1])
-                Destroyer='Destroyers'+str(Listside[i][1])
-                Cruisers='Cruisers'+str(Listside[i][1])
-                Uboat='Uboat'+str(Listside[i][1])
-                TroopS='TroopS'+str(Listside[i][1])
-                CBattleS='BattleS'+str(Listside[i][1])
-                CDestroyer='Destroyers'+str(Listside[i][1])
-                CCruisers='Cruisers'+str(Listside[i][1])
-                CUboat='Uboat'+str(Listside[i][1])
-                CTroopS='TroopS'+str(Listside[i][1])
-                populationcity=populationcity+casucount(BattleS,Destroyer,Cruisers,Uboat,TroopS,Fighter,Bomber,i,"loser",tr,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,2,populationcity)
+                populationcity=populationcity+casucount(False, i,"loser",tr,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,2,populationcity)
                 cons='cons'+str(Listside[i][1])
                 if globals()[cons]==1:
-                    populationcity=populationcity+casucount(CBattleS,CDestroyer,CCruisers,CUboat,CTroopS,CFighter,CBomber,i,"loser",tr,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,2,populationcity)
+                    populationcity=populationcity+casucount(True, i,"loser",tr,sidescoreat1,sidescoreat2,sidescoreDef1,sidescoreDef2,sidescoreairat1,sidescoreairat2,sidescoreairDef1,sidescoreairDef2,2,populationcity)
  
     populationcity=round(populationcity,0)
     print('Civil casualties:',populationcity)
