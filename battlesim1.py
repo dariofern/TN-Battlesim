@@ -343,7 +343,7 @@ def casucount(is_conscripts, i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,
                 casualty_factor = unit.casualty_factor
         except KeyError:
             # Unit is not in use in this battle.
-            pass
+            continue
 
         # Troopship crew is the base number plus however many troops
         # it is carrying.
