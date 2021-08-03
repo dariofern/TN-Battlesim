@@ -122,20 +122,8 @@ class Army:
             deaths=round(unit*d*typm,0)
             wounded=round((unit-deaths)*w*typm,0)
             remaining=unit-wounded-deaths
-            if typ==1:
-                casu[0]=casu[0]+wounded*mult
-                casu[1]=casu[1]+deaths*mult
-            if typ==2:
-                woundedDeath=random.randint(0, 10)
-                deathDeath=random.randint(50, 100)
-                woundedWounded=woundedDeath+15
-                woundedWounded=random.randint(0,woundedWounded)
-                deathWounded=100-deathDeath
-                deathWounded=random.randint(0,deathWounded)
-                casu[0]=casu[0]+round(wounded*mult*woundedWounded/100+deaths*mult*deathWounded/100,0)
-                casu[1]=casu[1]+round(deaths*mult*(deathDeath/100)+wounded*mult*(woundedDeath/100),0)
-            return int(remaining), int(wounded), int(deaths)
-        if status=='loser':
+        elif status=='loser':
+            # Magic numbers, magic numbers everywhere.
             p=(((scatW+scdefW)/(scatL+scdefL))**2)/1.35
             ld=d*(1+(p/2))
             if ld>=0.95:
@@ -146,20 +134,23 @@ class Army:
             deaths=round(unit*ld*typm,0)
             wounded=round((unit-deaths)*lw*typm,0)
             remaining=unit-wounded-deaths
-            if typ==1:
-                casu[0]=casu[0]+wounded*mult
-                casu[1]=casu[1]+deaths*mult
-            if typ==2:
-                woundedDeath=random.randint(0, 10)
-                deathDeath=random.randint(50, 100)
-                woundedWounded=woundedDeath+15
-                woundedWounded=random.randint(0,woundedWounded)
-                deathWounded=100-deathDeath
-                deathWounded=random.randint(0,deathWounded)
-                casu[0]=casu[0]+round(wounded*mult*woundedWounded/100+deaths*mult*deathWounded/100,0)
-                casu[1]=casu[1]+round(deaths*mult*(deathDeath/100)+wounded*mult*(woundedDeath/100),0)
-            return int(remaining), int(wounded), int(deaths)
-        return()
+
+        # Land battle
+        if typ == 1:
+            casu[0] = casu[0] + wounded * mult
+            casu[1] = casu[1] + deaths * mult
+        # Naval battle
+        if typ == 2:
+            woundedDeath = random.randint(0, 10)
+            deathDeath = random.randint(50, 100)
+            woundedWounded = woundedDeath+15
+            woundedWounded = random.randint(0,woundedWounded)
+            deathWounded = 100 - deathDeath
+            deathWounded = random.randint(0,deathWounded)
+            casu[0]=casu[0]+round(wounded*mult*woundedWounded/100+deaths*mult*deathWounded/100,0)
+            casu[1]=casu[1]+round(deaths*mult*(deathDeath/100)+wounded*mult*(woundedDeath/100),0)
+
+        return int(remaining), int(wounded), int(deaths)
 
 def filter_units(units, classes):
     """
