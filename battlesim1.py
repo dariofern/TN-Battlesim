@@ -17,33 +17,19 @@ with open(UNIT_DATA_FILE) as f:
 
 # Need to be able to map names of globals to names of units during refactoring.
 global_names = {
-    "Inf" : "infantry",
-    "Tanks" : "tank",
+    "infantry" : "Inf",
+    "tank" : "Tanks",
     "AFV" : "AFV",
     "AAA" : "AAA",
     "FA" : "FA",
-    "Fighter" : "fighter",
-    "Bomber" : "bomber",
-    "BattleS" : "battleship",
-    "Destroyer" : "destroyer",
-    "Cruisers" : "cruiser",
-    "Uboat" : "uboat",
-    "TroopS" : "troopship"
+    "fighter" : "Fighter",
+    "bomber" : "Bomber",
+    "battleship" : "BattleS",
+    "destroyer" : "Destroyer",
+    "cruiser" : "Cruisers",
+    "uboat" : "Uboat",
+    "troopship" : "TroopS"
 }
-
-global_names_reversed = dict(zip(global_names.values(), global_names.keys()))
-
-def get_unit(name):
-    """
-    Helper function to get Unit from its name.
-
-    We only need this until we get rid of the globals.
-    """
-    for unit in UNIT_TYPES:
-        if unit.name == name:
-            return unit
-
-    raise ValueError(f"Unit {name} not recognized!")
 
 class Army:
 
@@ -80,8 +66,7 @@ class Army:
         offense = 0
         defense = 0
         # Sum up base unit stats.
-        for name, qty in self.units.items():
-            unit = get_unit(name)
+        for unit, qty in self.units.items():
             offense += unit.attack * qty
             defense += unit.defense * qty
         return offense, defense
@@ -181,14 +166,10 @@ def filter_units(units, classes):
     Filter units returning those in the specified classes.
     """
     filtered_units = {}
-    for name, qty in units.items():
-        for unit in UNIT_TYPES:
-            if unit.name == name:
-                if unit.unit_class in classes:
-                    filtered_units[name] = qty
-                break
-        else:
-            raise ValueError(f"Unit {name} not recognized!")
+    for unit, qty in units.items():
+        if unit.unit_class in classes:
+            filtered_units[unit] = qty
+
     return filtered_units
 
 
@@ -236,9 +217,9 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
     for unit in UNIT_TYPES:
         if unit.unit_class not in allowed_classes:
             continue
-        professionals[unit.name] = input_positive_integer(f"{unit.name} : ")
+        professionals[unit] = input_positive_integer(f"{unit.name} : ")
         if globals()[cons] == 1:
-            conscripts[unit.name] = input_positive_integer(
+            conscripts[unit] = input_positive_integer(
                 f"conscript {unit.name} : ")
 
     prof_army = Army(filter_units(professionals, {"land", "naval"}))
@@ -246,15 +227,17 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
     prof_army_air = Army(filter_units(professionals, {"air"}))
     conscript_army_air = Army(filter_units(conscripts, {"air"}))
 
-    for g_name, name in global_names.items():
-        globals()[f"{g_name}{n}"] = professionals[name]
-        globals()[f"C{g_name}{n}"] = conscripts[name]
+    for unit, qty in professionals.items():
+        globals()[f"{global_names[unit.name]}{n}"] = qty
+    for unit, qty in conscripts.items():
+        globals()[f"C{global_names[unit.name]}{n}"] = qty
 
+    # If we're having a naval battle.
     tr='tr'+str(n)
-    if (globals()[f"TroopS{n}"]+globals()[f"CTroopS{n}"])!=0:
-        globals()[tr]=round(int(input("Number of soldiers transported by troopships"))/(globals()[TroopS]+globals()[CTroopS]),0)
-    else:
-        globals()[tr]=0
+    globals()[tr] = 0
+    if typ == 2:
+        if (globals()[f"TroopS{n}"]+globals()[f"CTroopS{n}"])!=0:
+            globals()[tr]=round(int(input("Number of soldiers transported by troopships"))/(globals()[TroopS]+globals()[CTroopS]),0)
 
     print("Country stats :")
 
@@ -362,7 +345,7 @@ def casucount(is_conscripts, i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,
 
     for unit in UNIT_TYPES:
         # Name of global containing name of global.
-        g_name_name = globals()[global_names_reversed[f"{unit.name}"]]
+        g_name_name = globals()[global_names[f"{unit.name}"]]
 
         try:
             if is_conscripts:
