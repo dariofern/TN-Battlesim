@@ -17,144 +17,196 @@ with open(UNIT_DATA_FILE) as f:
 
 # Need to be able to map names of globals to names of units during refactoring.
 global_names = {
-    "Inf" : "infantry",
-    "Tanks" : "tank",
+    "infantry" : "Inf",
+    "tank" : "Tanks",
     "AFV" : "AFV",
     "AAA" : "AAA",
     "FA" : "FA",
-    "Fighter" : "fighter",
-    "Bomber" : "bomber",
-    "BattleS" : "battleship",
-    "Destroyer" : "destroyer",
-    "Cruisers" : "cruiser",
-    "Uboat" : "uboat",
-    "TroopS" : "troopship"
+    "fighter" : "Fighter",
+    "bomber" : "Bomber",
+    "battleship" : "BattleS",
+    "destroyer" : "Destroyer",
+    "cruiser" : "Cruisers",
+    "uboat" : "Uboat",
+    "troopship" : "TroopS"
 }
 
-global_names_reversed = dict(zip(global_names.values(), global_names.keys()))
+class Army:
+    """ Represents a group of units and their corresponding numbers. """
 
-def get_unit(name):
-    """
-    Helper function to get Unit from its name.
+    both_factors = frozenset([
+        "budget_factor",
+        "climate_factor",
+        "conscript_factor",
+        "luck_factor",
+        "morale_factor",
+        "supply_cut_factor",
+        "tired_factor",
+        "terrain_factor",
+        "wage_factor"
+    ])
 
-    We only need this until we get rid of the globals.
-    """
-    for unit in UNIT_TYPES:
-        if unit.name == name:
-            return unit
+    offense_factors = frozenset([
+        "offense_tactic_factor"
+    ])
 
-    raise ValueError(f"Unit {name} not recognized!")
+    defense_factors = frozenset([
+        "defense_tactic_factor",
+        "entrenchment_factor"
+    ])
 
-def army_strength(units, wage_factor, terrain_factor,
-                  entrenchment_factor, luck_factor, conscript_factor=1):
-    """
-    Compute the offensive and defensive score of an army.
+    def __init__(self, units):
+        self.units = units
 
-    Wage, terrain advantage, entrenchment, a luck factor and a
-    conscription factor (default 1 ) are all taken into account.
-    Factors may not be 0, but resulting army strength may be.
-    """
-    # These checks could be redundant, but good to have just in case.
-    if wage_factor <= 0:
-        raise ValueError("Wage factor must be greater than 0.")
-    if terrain_factor <= 0:
-        raise ValueError("Terrain factor must be greater than 0.")
-    if entrenchment_factor <= 0:
-        raise ValueError("Entrenchment factor must be greater than 0.")
-    if luck_factor <= 0:
-        raise ValueError("Luck factor must be greater than 0.")
-    if conscript_factor <= 0:
-        raise ValueError("Conscript factor must be greater than 0.")
+    def base_strength(self):
+        """
+        Compute the base offensive and defensive score of an army.
 
-    offense = 0
-    defense = 0
-    # Sum up base unit stats.
-    for name, qty in units.items():
-        unit = get_unit(name)
-        offense += unit.attack * qty
-        defense += unit.defense * qty
+        No factors besides the units are taken into account.
+        """
+        offense = 0
+        defense = 0
+        # Sum up base unit stats.
+        for unit, qty in self.units.items():
+            offense += unit.attack * qty
+            defense += unit.defense * qty
+        return offense, defense
 
+    def strength(self, **kwargs):
+        """
+        Compute the offensive and defensive score of an army.
 
-    # Apply modifiers.
-    offense *= wage_factor * terrain_factor * luck_factor * conscript_factor
-    defense *= (wage_factor * terrain_factor * entrenchment_factor *
-               luck_factor * conscript_factor)
-    return offense, defense
+        Wage, terrain advantage, entrenchment, a luck factor and a
+        conscription factor (default 1 ) are all taken into account.
+        Factors may not be 0, but resulting army strength may be.
+        """
 
-def casualties(unit,scatW,scatL,scdefW,scdefL,status,casu,sn,mult,cons,typ,air):
-    typm=typ-(typ/2)+air/2
-    if air==1:
-        if ((-scatL)+scdefW)<((-scatW)+scdefL):
-            if status=='loser':
-                status='winner'
-            if status=='winner':
-                status='loser'
-            scat=[scatL,scatW]
-            scdef=[scdefL,scdefW]
-            scatL=scat[1]
-            scatW=scat[0]
-            scdefL=scdef[1]
-            scdefW=scdef[0]
-    w=(((scatL+scdefL)/(scatW+scdefW))*(1+((scatL+scdefL)/(scatW+scdefW))))/4
-    d=(((scatL+scdefL)/(scatW+scdefW))*(1+((scatL+scdefL)/(scatW+scdefW))))/10
-    if status=='winner':
-        deaths=round(unit*d*typm,0)
-        wounded=round((unit-deaths)*w*typm,0)
-        remaining=unit-wounded-deaths
-        if typ==1:
-            casu[0]=casu[0]+wounded*mult
-            casu[1]=casu[1]+deaths*mult
-        if typ==2:
-            woundedDeath=random.randint(0, 10)
-            deathDeath=random.randint(50, 100)
-            woundedWounded=woundedDeath+15
-            woundedWounded=random.randint(0,woundedWounded)
-            deathWounded=100-deathDeath
-            deathWounded=random.randint(0,deathWounded)
+        offense, defense = self.base_strength()
+
+        # Apply modifiers.
+        for factor, value in kwargs.items():
+            if value <= 0:
+                raise ValueError(f"{factor} has value {value}, but must be "
+                                 "greater than 0.")
+
+            if factor in self.both_factors:
+                offense *= value
+                defense *= value
+            elif factor in self.offense_factors:
+                offense *= value
+            elif factor in self.defense_factors:
+                defense *= value
+            else:
+                raise ValueError(f"{factor} is not a valid factor.")
+
+        return offense, defense
+
+    def casu(self, is_conscripts, i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,scdefWair,scdefLair,typ,pop):
+        """
+        Compute three new armies of alive, damaged, and dead units.
+        """
+
+        alive = {}
+        wounded = {}
+        dead = {}
+
+        for unit in self.units:
+            # Name of global containing name of global.
+            g_name_name = globals()[global_names[f"{unit.name}"]]
+
+            if is_conscripts:
+                g_name = globals()[f"C{g_name_name}"]
+                casualty_factor = unit.conscript_casualty_factor
+            else:
+                g_name = globals()[g_name_name]
+                casualty_factor = unit.casualty_factor
+
+            # Troopship crew is the base number plus however many troops
+            # it is carrying.
+            if unit.name == "troopship" and tr != 0:
+                crew = unit.crew + globals()[tr]
+            else:
+                crew = unit.crew
+
+            if unit.unit_class != "air":
+                alive, wounded, dead = Army.casualties(g_name,scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,casualty_factor,crew,typ,0)
+            # Air troops get away free under these obscure, unreadable conditions.
+            elif unit.unit_class == "air" and (s=='winner' and scdefWair!=0 and scatLair==0) or (s=='loser' and scdefLair!=0 and scatWair==0):
+                alive, wounded, dead = globals()[g_name], 0, 0
+            elif unit.unit_class == "air" and (s=='winner' and scdefWair!=0 and scatLair!=0) or (s=='loser' and scdefLair!=0 and scatWair!=0) :
+                alive, wounded, dead = Army.casualties(g_name,scatWair,scatLair,scdefWair,scdefLair,s,casualties1,sidenat1,1,crew,1,1)
+            else:
+                # Unit type not handled?
+                continue
+
+            alive[unit] = alive
+            wounded[unit] = wounded
+            dead[unit] = dead
+
+        return alive, wounded, dead
+
+    # Staticmethod until we can refactor this so it uses its own unit stats.
+    @staticmethod
+    def casualties(unit,scatW,scatL,scdefW,scdefL,status,casu,sn,mult,cons,typ,air):
+        typm=typ-(typ/2)+air/2
+        if air==1:
+            if ((-scatL)+scdefW)<((-scatW)+scdefL):
+                if status=='loser':
+                    status='winner'
+                if status=='winner':
+                    status='loser'
+                scat=[scatL,scatW]
+                scdef=[scdefL,scdefW]
+                scatL=scat[1]
+                scatW=scat[0]
+                scdefL=scdef[1]
+                scdefW=scdef[0]
+        w=(((scatL+scdefL)/(scatW+scdefW))*(1+((scatL+scdefL)/(scatW+scdefW))))/4
+        d=(((scatL+scdefL)/(scatW+scdefW))*(1+((scatL+scdefL)/(scatW+scdefW))))/10
+        if status=='winner':
+            deaths=round(unit*d*typm,0)
+            wounded=round((unit-deaths)*w*typm,0)
+            remaining=unit-wounded-deaths
+        elif status=='loser':
+            # Magic numbers, magic numbers everywhere.
+            p=(((scatW+scdefW)/(scatL+scdefL))**2)/1.35
+            ld=d*(1+(p/2))
+            if ld>=0.95:
+                ld=0.95
+            lw=w*(1+(p/2))
+            if lw>=1:
+                lw=1
+            deaths=round(unit*ld*typm,0)
+            wounded=round((unit-deaths)*lw*typm,0)
+            remaining=unit-wounded-deaths
+
+        # Land battle
+        if typ == 1:
+            casu[0] = casu[0] + wounded * mult
+            casu[1] = casu[1] + deaths * mult
+        # Naval battle
+        if typ == 2:
+            woundedDeath = random.randint(0, 10)
+            deathDeath = random.randint(50, 100)
+            woundedWounded = woundedDeath+15
+            woundedWounded = random.randint(0,woundedWounded)
+            deathWounded = 100 - deathDeath
+            deathWounded = random.randint(0,deathWounded)
             casu[0]=casu[0]+round(wounded*mult*woundedWounded/100+deaths*mult*deathWounded/100,0)
             casu[1]=casu[1]+round(deaths*mult*(deathDeath/100)+wounded*mult*(woundedDeath/100),0)
+
         return int(remaining), int(wounded), int(deaths)
-    if status=='loser':
-        p=(((scatW+scdefW)/(scatL+scdefL))**2)/1.35
-        ld=d*(1+(p/2))
-        if ld>=0.95:
-            ld=0.95
-        lw=w*(1+(p/2))
-        if lw>=1:
-            lw=1
-        deaths=round(unit*ld*typm,0)
-        wounded=round((unit-deaths)*lw*typm,0)
-        remaining=unit-wounded-deaths
-        if typ==1:
-            casu[0]=casu[0]+wounded*mult
-            casu[1]=casu[1]+deaths*mult
-        if typ==2:
-            woundedDeath=random.randint(0, 10)
-            deathDeath=random.randint(50, 100)
-            woundedWounded=woundedDeath+15
-            woundedWounded=random.randint(0,woundedWounded)
-            deathWounded=100-deathDeath
-            deathWounded=random.randint(0,deathWounded)
-            casu[0]=casu[0]+round(wounded*mult*woundedWounded/100+deaths*mult*deathWounded/100,0)
-            casu[1]=casu[1]+round(deaths*mult*(deathDeath/100)+wounded*mult*(woundedDeath/100),0)
-        return int(remaining), int(wounded), int(deaths)
-    return()
 
 def filter_units(units, classes):
     """
     Filter units returning those in the specified classes.
     """
     filtered_units = {}
-    for name, qty in units.items():
-        for unit in UNIT_TYPES:
-            if unit.name == name:
-                if unit.unit_class in classes:
-                    filtered_units[name] = qty
-                break
-        else:
-            raise ValueError(f"Unit {name} not recognized!")
-    return filtered_units
+    for unit, qty in units.items():
+        if unit.unit_class in classes:
+            filtered_units[unit] = qty
 
+    return filtered_units
 
 #DATA INPUT
 
@@ -200,49 +252,44 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
     for unit in UNIT_TYPES:
         if unit.unit_class not in allowed_classes:
             continue
-        professionals[unit.name] = input_positive_integer(f"{unit.name} : ")
+        professionals[unit] = input_positive_integer(f"{unit.name} : ")
         if globals()[cons] == 1:
-            conscripts[unit.name] = input_positive_integer(
+            conscripts[unit] = input_positive_integer(
                 f"conscript {unit.name} : ")
 
-    for g_name, name in global_names.items():
-        globals()[f"{g_name}{n}"] = professionals[name]
-        globals()[f"C{g_name}{n}"] = conscripts[name]
+    prof_army = Army(filter_units(professionals, {"land", "naval"}))
+    conscript_army = Army(filter_units(conscripts, {"land", "naval"}))
+    prof_army_air = Army(filter_units(professionals, {"air"}))
+    conscript_army_air = Army(filter_units(conscripts, {"air"}))
 
+    for unit, qty in professionals.items():
+        globals()[f"{global_names[unit.name]}{n}"] = qty
+    for unit, qty in conscripts.items():
+        globals()[f"C{global_names[unit.name]}{n}"] = qty
+
+    # If we're having a naval battle.
     tr='tr'+str(n)
-    if (globals()[f"TroopS{n}"]+globals()[f"CTroopS{n}"])!=0:
-        globals()[tr]=round(int(input("Number of soldiers transported by troopships"))/(globals()[TroopS]+globals()[CTroopS]),0)
-    else:
-        globals()[tr]=0
+    globals()[tr] = 0
+    if typ == 2:
+        if (globals()[f"TroopS{n}"]+globals()[f"CTroopS{n}"])!=0:
+            globals()[tr]=round(int(input("Number of soldiers transported by troopships"))/(globals()[TroopS]+globals()[CTroopS]),0)
 
     print("Country stats :")
 
-    Part='Part'+str(n)
-    globals()[Part] = ((int(input("Military budget (without the $ and no commas) : ")))/100000000000)+1
-    Rese='Rese'+str(n)
-    globals()[Rese] = ((int(input("Research budget (without the $ and no commas) : ")))/100000000000)+1
-    Wage='Wage'+str(n)
-    globals()[Wage] = (((int(input("Wage level (1-4) : ")))-1)/10)+1
-    CWage='CWage'+str(n)
-    globals()[CWage] = (((int(input("Conscript Wage level (1-4) : ")))-1)/4)+1
-    Tired='Tired'+str(n)
-    globals()[Tired] = (1-(int(input("Recent Battles (one year) : "))/20))
-    Morale='Morale'+str(n)
-    Mor = (10 - (int(input("Recent Battles lost (one year) : "))))+(int(input("Recent Battles won (one year) : ")))
-    if Mor > 10 :
-        Mor = 10
-    if Mor < 1 :
-        Mor = 1
-    else:
-        Mor = Mor
-    globals()[Morale] = 1+((-5+Mor)/20)
+    military_budget = ((int(input("Military budget (without the $ and no commas) : ")))/100000000000)+1
+    research_budget = ((int(input("Research budget (without the $ and no commas) : ")))/100000000000)+1
+    wage_factor = (((int(input("Wage level (1-4) : ")))-1)/10)+1
+    conscript_wage_factor = (((int(input("Conscript Wage level (1-4) : ")))-1)/4)+1
+    tired_factor = (1-(int(input("Recent Battles (one year) : "))/20))
+    morale = (10 - (int(input("Recent Battles lost (one year) : "))))+(int(input("Recent Battles won (one year) : ")))
+    # Morale should be between 1 and 10, inclusive.
+    morale = min(10, morale)
+    morale = max(1, morale)
+    morale_factor = 1 + (morale - 5) / 20
     
     if typ==1:
-
-        Terrain='Terrain'+str(n)
-        globals()[Terrain] = 1+((int(input("Terrain Knowledge (out of 5) : "))-3)/20)
-        Climate='Climate'+str(n)
-        globals()[Climate] = 0.25+(float(input("Climate malus : ")))
+        terrain_knowledge = 1+((int(input("Terrain Knowledge (out of 5) : "))-3)/20)
+        climate_factor = 0.25+(float(input("Climate malus : ")))
         trench = 'trench'+str(n)
         globals()[trench] = (int(input("Entrenchement? [0] : no [1]: yes : ")))
         if globals()[trench]==1:
@@ -256,12 +303,12 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
         city=int(input("Defending a city? [0] : no [1]: yes : "))
         landing=int(input("Disembarkment ? [0] : no [1]: yes : "))
         Tadv = 'Tadv'+str(n)
-        globals()[Tadv]=1+(hill+river+city-landing)/2
-        Supply='Supply'+str(n)
-        globals()[Supply] = 1-(int(input("Supply line cut ? [0]:no [1]:yes"))/3)
+        terrain_advantage = 1 + (hill + river + city - landing) / 2
+        terrain_factor = terrain_knowledge + terrain_advantage
+        supply_cut_factor = 1 - (
+            int(input("Supply line cut ? [0]:no [1]:yes")) / 3)
 
     else :
-
         Terrain='Terrain'+str(n)
         globals()[Terrain] = 1
         Climate='Climate'+str(n)
@@ -273,48 +320,49 @@ def TEAM(n,sidesat,sidesdef,nsid,li,typ):
         Supply='Supply'+str(n)
         globals()[Supply] = 1
                                    
-    Luck = 'Luck'+str(n)
-    globals()[Luck] = (random.randint(85, 112))/100
     GenDef = 'GenDef'+str(n)
     globals()[GenDef] = int(input("General's defense skills : "))
     GenOff = 'GenOff'+str(n)
     globals()[GenOff] = int(input("General's attack skills : "))
-    TacticOff = 'TacticOff'+str(n)
-    globals()[TacticOff] = float(input("Offensive Tactic bonus : "))*(1+(globals()[GenOff])/20)
-    TacticDef = 'TacticDef'+str(n)
-    globals()[TacticDef] = float(input("Defensive Tactic bonus : "))*(1+(globals()[GenDef])/20)
-    Multi = 'Multi'+str(n)  
-    globals()[Multi] = globals()[Supply]*globals()[Rese]*globals()[Luck]*globals()[Climate]*globals()[Terrain]*globals()[Morale]*globals()[Tired]*globals()[Part]*globals()[TacticOff]*globals()[TacticDef]
+    offense_tactic_factor = float(input("Offensive Tactic bonus : "))*(1+(globals()[GenOff])/20)
+    defense_tactic_factor = float(input("Defensive Tactic bonus : "))*(1+(globals()[GenDef])/20)
 
-    prof_off, prof_def = army_strength(
-        units=filter_units(professionals, {"land", "naval"}),
-        wage_factor=globals()[Wage],
-        terrain_factor=globals()[Tadv],
+    factors = {
+        "budget_factor" : military_budget + research_budget,
+        "climate_factor" : climate_factor,
+        "defense_tactic_factor" : defense_tactic_factor,
+        "luck_factor" : random.randint(85, 112) / 100,
+        "morale_factor" : morale_factor,
+        "offense_tactic_factor" : offense_tactic_factor,
+        "supply_cut_factor" : supply_cut_factor,
+        "tired_factor" : tired_factor,
+    }
+
+    prof_off, prof_def = prof_army.strength(
+        wage_factor=wage_factor,
         entrenchment_factor=globals()[Entrench],
-        luck_factor=globals()[Multi])
+        terrain_factor=terrain_factor,
+        **factors)
 
-    conscript_off, conscript_def = army_strength(
-        units=filter_units(conscripts, {"land", "naval"}),
-        wage_factor=globals()[CWage],
-        terrain_factor=globals()[Tadv],
+    conscript_off, conscript_def = conscript_army.strength(
+        wage_factor=conscript_wage_factor,
         entrenchment_factor=globals()[Entrench],
-        luck_factor=globals()[Multi],
-        conscript_factor=0.3)
+        terrain_factor=terrain_factor,
+        conscript_factor=0.3,
+        **factors)
 
-    air_prof_off, air_prof_def = army_strength(
-        units=filter_units(professionals, {"air"}),
-        wage_factor=globals()[Wage],
+    air_prof_off, air_prof_def = prof_army_air.strength(
+        wage_factor=wage_factor,
         terrain_factor=1,
         entrenchment_factor=1,
-        luck_factor=globals()[Multi])
+        **factors)
 
-    air_conscript_off, air_conscript_def = army_strength(
-        units=filter_units(conscripts, {"air"}),
-        wage_factor=globals()[CWage],
+    air_conscript_off, air_conscript_def = conscript_army_air.strength(
+        wage_factor=conscript_wage_factor,
         terrain_factor=1,
         entrenchment_factor=1,
-        luck_factor=globals()[Multi],
-        conscript_factor=0.3)
+        conscript_factor=0.3,
+        **factors)
 
     li.append([nsid,n])
     return (prof_off + conscript_off + air_prof_off + air_conscript_off,
@@ -332,7 +380,7 @@ def casucount(is_conscripts, i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,
 
     for unit in UNIT_TYPES:
         # Name of global containing name of global.
-        g_name_name = globals()[global_names_reversed[f"{unit.name}"]]
+        g_name_name = globals()[global_names[f"{unit.name}"]]
 
         try:
             if is_conscripts:
@@ -354,12 +402,12 @@ def casucount(is_conscripts, i,s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,
 
         try:
             if unit.unit_class != "air":
-                alive, wounded, dead = casualties(g_name,scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,casualty_factor,crew,typ,0)
+                alive, wounded, dead = Army.casualties(g_name,scatW,scatL,scdefW,scdefL,s,casualties1,sidenat1,casualty_factor,crew,typ,0)
             # Air troops get away free under these obscure, unreadable conditions.
             elif unit.unit_class == "air" and (s=='winner' and scdefWair!=0 and scatLair==0) or (s=='loser' and scdefLair!=0 and scatWair==0):
                 alive, wounded, dead = globals()[g_name], 0, 0
             elif unit.unit_class == "air" and (s=='winner' and scdefWair!=0 and scatLair!=0) or (s=='loser' and scdefLair!=0 and scatWair!=0) :
-                alive, wounded, dead = casualties(globals()[g_name],scatWair,scatLair,scdefWair,scdefLair,s,casualties1,sidenat1,1,Consf,1,1)
+                alive, wounded, dead = Army.casualties(g_name,scatWair,scatLair,scdefWair,scdefLair,s,casualties1,sidenat1,1,crew,1,1)
             else:
                 # Unit type not handled?
                 continue
