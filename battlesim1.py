@@ -101,16 +101,16 @@ class Army:
 
         return offense, defense
 
-    def casu(self, is_conscripts, s,tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,scdefWair,scdefLair,typ,pop):
+    def casu(self, is_conscripts, s, tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,scdefWair,scdefLair,typ,pop):
         """
         Compute three new armies of alive, damaged, and dead units.
         """
 
-        casualties1 = [0, 0]
-
         alive = {}
         wounded = {}
         dead = {}
+
+        casualties = [0, 0]
 
         for unit, qty in self.units.items():
 
@@ -127,9 +127,11 @@ class Army:
             else:
                 crew = unit.crew
 
-            alive[unit], wounded[unit], dead[unit] = Army.casualties(qty,scatW,scatL,scdefW,scdefL,s,casualties1,casualty_factor,crew,typ,nearby_pop)
+            alive[unit], wounded[unit], dead[unit] = Army.casualties(qty,scatW,scatL,scdefW,scdefL,s,casualties,casualty_factor,crew,typ,nearby_pop)
 
-        print(casualties1)
+        # This isn't a good way to do this but it will keep everything running.
+        globals()["nearby_pop"] *= (
+            casualties[0] + casualties[1]) / (nearby_pop + 1) // 10
 
         return alive, wounded, dead
 
@@ -180,8 +182,8 @@ class Army:
             woundedWounded = random.randint(0,woundedWounded)
             deathWounded = 100 - deathDeath
             deathWounded = random.randint(0,deathWounded)
-            casu[0]=casu[0]+round(wounded*mult*woundedWounded/100+deaths*mult*deathWounded/100,0)
-            casu[1]=casu[1]+round(deaths*mult*(deathDeath/100)+wounded*mult*(woundedDeath/100),0)
+            casu[0] += round(wounded*mult*woundedWounded/100+deaths*mult*deathWounded/100,0)
+            casu[1] += round(deaths*mult*(deathDeath/100)+wounded*mult*(woundedDeath/100),0)
 
         return int(remaining), int(wounded), int(deaths)
 
@@ -247,7 +249,6 @@ class Nation():
              battle_type,
              nearby_pop):
         """ Get casualties of each army. """
-        #casualties1 = [0,0]
         prof_casualties = self.prof_army.casu(
             False,
             status,
@@ -457,7 +458,6 @@ def input_factors(typ, n):
 
 def print_casualties(nation, description, units):
     print("------------------------------------------------------------------------")
-    casualties1=[0,0]
 
     print(f"Casualties for {nation.name}")
     print(f"|Unit Type\t\t|Remaining\t|Wounded\t|Dead")
@@ -470,8 +470,6 @@ def print_casualties(nation, description, units):
         padding = ' ' * (20 - len(print_name))
         print(f" {print_name + padding}\t {alive[unit]}"
               f"\t\t {wounded[unit]}\t\t {dead[unit]}")
-
-    print("Casualties (wounded/dead):",casualties1)
 
 first_side_nations = []
 second_side_nations = []
@@ -514,6 +512,7 @@ for i in range(n):
     air_off_second_side += air_off_strength
     air_def_second_side += air_def_strength
 
+print("Setting pop")
 nearby_pop = int(input('nearby population')) / 6000
 first_side_score = def_second_side - off_first_side
 second_side_score = def_first_side - off_second_side
