@@ -466,10 +466,11 @@ def print_casualties(nation, description, units):
     # Just to get the name of every unit to be considered.
     for unit in alive:
         print_name = f"{description} {unit.name}"
-        # 20 was chosen arbitrarily.
         padding = ' ' * (20 - len(print_name))
-        print(f" {print_name + padding}\t {alive[unit]}"
-              f"\t\t {wounded[unit]}\t\t {dead[unit]}")
+        alive_padding = ' ' * (10 - len(str(alive[unit])))
+        wounded_padding = ' ' * (10 - len(str(wounded[unit])))
+        print(f" {print_name}{padding}\t {alive[unit]}{alive_padding}"
+              f"\t {wounded[unit]}{wounded_padding}\t {dead[unit]}")
 
 first_side_nations = []
 second_side_nations = []
