@@ -101,7 +101,7 @@ class Army:
 
         return offense, defense
 
-    def casu(self, is_conscripts, s, tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,scdefWair,scdefLair,typ,pop):
+    def casualties(self, is_conscripts, s, tr,scatW,scatL,scdefW,scdefL,scatWair,scatLair,scdefWair,scdefLair,typ,pop):
         """
         Compute three new armies of alive, damaged, and dead units.
         """
@@ -110,7 +110,7 @@ class Army:
         wounded = {}
         dead = {}
 
-        casualties = [0, 0]
+        casualty_numbers = [0, 0]
 
         for unit, qty in self.units.items():
 
@@ -127,17 +127,16 @@ class Army:
             else:
                 crew = unit.crew
 
-            alive[unit], wounded[unit], dead[unit] = Army.casualties(qty,scatW,scatL,scdefW,scdefL,s,casualties,casualty_factor,crew,typ,nearby_pop)
+            alive[unit], wounded[unit], dead[unit] = self.unit_casualties(qty,scatW,scatL,scdefW,scdefL,s,casualty_numbers,casualty_factor,crew,typ,nearby_pop)
 
         # This isn't a good way to do this but it will keep everything running.
         globals()["nearby_pop"] *= (
-            casualties[0] + casualties[1]) / (nearby_pop + 1) // 10
+            casualty_numbers[0] + casualty_numbers[1]) / (nearby_pop + 1) // 10
 
         return alive, wounded, dead
 
-    # Staticmethod until we can refactor this so it uses its own unit stats.
     @staticmethod
-    def casualties(unit,scatW,scatL,scdefW,scdefL,status,casu,mult,cons,typ,air):
+    def unit_casualties(unit,scatW,scatL,scdefW,scdefL,status,casu,mult,cons,typ,air):
         typm=typ-(typ/2)+air/2
         if air==1:
             if ((-scatL)+scdefW)<((-scatW)+scdefL):
@@ -249,7 +248,7 @@ class Nation():
              battle_type,
              nearby_pop):
         """ Get casualties of each army. """
-        prof_casualties = self.prof_army.casu(
+        prof_casualties = self.prof_army.casualties(
             False,
             status,
             tr,
@@ -263,7 +262,7 @@ class Nation():
             air_def_second_side,
             battle_type,
             nearby_pop)
-        conscript_casualties = self.conscript_army.casu(
+        conscript_casualties = self.conscript_army.casualties(
             True,
             status,
             tr,
@@ -292,7 +291,7 @@ class Nation():
         elif (status == "winner" and air_off_first_side !=0 and
                 air_off_second_side != 0) or (status == "loser" and
                 air_def_second_side != 0 and air_off_first_side != 0):
-            prof_air_casualties = self.prof_air_army.casu(
+            prof_air_casualties = self.prof_air_army.casualties(
                 False,
                 status,
                 tr,
@@ -306,7 +305,7 @@ class Nation():
                 1,
                 1,
                 nearby_pop)
-            conscript_air_casualties = self.conscript_air_army.casu(
+            conscript_air_casualties = self.conscript_air_army.casualties(
                 True,
                 status,
                 tr,
@@ -392,10 +391,10 @@ def input_armies(typ):
 def input_factors(typ, n):
 
     # If we're having a naval battle.
-    tr='tr'+str(n)
+    tr = f"tr{n}"
     globals()[tr] = 0
     if typ == 2:
-        if (globals()[f"TroopS{n}"]+globals()[f"CTroopS{n}"])!=0:
+        if globals()[f"TroopS{n}"] + globals()[f"CTroopS{n}"] != 0:
             globals()[tr]=round(int(input("Number of soldiers transported by troopships"))/(globals()[TroopS]+globals()[CTroopS]),0)
 
     print("Country stats :")
@@ -456,16 +455,12 @@ def input_factors(typ, n):
     return (wage_factor, conscript_wage_factor, entrenchment_factor,
             terrain_factor, factors)
 
-def print_casualties(nation, description, units):
-    print("------------------------------------------------------------------------")
-
-    print(f"Casualties for {nation.name}")
-    print(f"|Unit Type\t\t|Remaining\t|Wounded\t|Dead")
-
+def print_casualties(description, units):
+    print("-" * 20)
     alive, wounded, dead = units
     # Just to get the name of every unit to be considered.
     for unit in alive:
-        print_name = f"{description} {unit.name}"
+        print_name = f"{description}{unit.name}"
         padding = ' ' * (20 - len(print_name))
         alive_padding = ' ' * (10 - len(str(alive[unit])))
         wounded_padding = ' ' * (10 - len(str(wounded[unit])))
@@ -533,18 +528,24 @@ tr = 0
 for nation in winning_nations:
     (prof_casualties, conscript_casualties,
                      prof_air_casualties, conscript_air_casualties) = nation.casu("winner",tr,off_first_side,off_second_side,def_first_side,def_second_side,air_off_first_side,air_off_second_side,air_def_first_side,air_def_second_side,typ,nearby_pop)
-    print_casualties(nation, "", prof_casualties)
-    print_casualties(nation, "conscript", conscript_casualties)
-    print_casualties(nation, "", prof_air_casualties)
-    print_casualties(nation, "conscript", conscript_air_casualties)
+    print("-" * 79)
+    print(f"Casualties for {nation.name}")
+    print(f"|Unit Type\t\t|Remaining\t|Wounded\t|Dead")
+    print_casualties("", prof_casualties)
+    print_casualties("conscript ", conscript_casualties)
+    print_casualties("", prof_air_casualties)
+    print_casualties("conscript ", conscript_air_casualties)
 
 for nation in losing_nations:
     (prof_casualties, conscript_casualties,
                      prof_air_casualties, conscript_air_casualties) = nation.casu("winner",tr,off_first_side,off_second_side,def_first_side,def_second_side,air_off_first_side,air_off_second_side,air_def_first_side,air_def_second_side,typ,nearby_pop)
-    print_casualties(nation, "", prof_casualties)
-    print_casualties(nation, "conscript", conscript_casualties)
-    print_casualties(nation, "", prof_air_casualties)
-    print_casualties(nation, "conscript", conscript_air_casualties)
+    print("-" * 79)
+    print(f"Casualties for {nation.name}")
+    print(f"|Unit Type\t\t|Remaining\t|Wounded\t|Dead")
+    print_casualties("", prof_casualties)
+    print_casualties("conscript ", conscript_casualties)
+    print_casualties("", prof_air_casualties)
+    print_casualties("conscript ", conscript_air_casualties)
 
 # Population has been broken.
 nearby_pop = round(nearby_pop / 6000, 0)
