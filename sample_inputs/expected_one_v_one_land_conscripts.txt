@@ -1,0 +1,52 @@
+Type of battle : [1]:land, [2]:seaName of the first side :Nations fighting for this side :
+Name of the country : Conscripts ? [1]:yes [0]:noinfantry : conscript infantry : tank : conscript tank : AFV : conscript AFV : AAA : conscript AAA : FA : conscript FA : fighter : conscript fighter : bomber : conscript bomber : Country stats :
+Military budget (without the $ and no commas) : Research budget (without the $ and no commas) : Wage level (1-4) : Conscript Wage level (1-4) : Recent Battles (one year) : Recent Battles lost (one year) : Recent Battles won (one year) : Terrain Knowledge (out of 5) : Climate malus : Entrenchement? [0] : no [1]: yes : Elevation advantage? [0] : no [1]: yes : Defending a river? [0] : no [1]: yes : Defending a city? [0] : no [1]: yes : Disembarkment ? [0] : no [1]: yes : Supply line cut ? [0]:no [1]:yesGeneral's defense skills : General's attack skills : Offensive Tactic bonus : Defensive Tactic bonus : 
+Name of the second side :Nations fighting for this side :
+Name of the country : Conscripts ? [1]:yes [0]:noinfantry : conscript infantry : tank : conscript tank : AFV : conscript AFV : AAA : conscript AAA : FA : conscript FA : fighter : conscript fighter : bomber : conscript bomber : Country stats :
+Military budget (without the $ and no commas) : Research budget (without the $ and no commas) : Wage level (1-4) : Conscript Wage level (1-4) : Recent Battles (one year) : Recent Battles lost (one year) : Recent Battles won (one year) : Terrain Knowledge (out of 5) : Climate malus : Entrenchement? [0] : no [1]: yes : Entrenchement level : Elevation advantage? [0] : no [1]: yes : Defending a river? [0] : no [1]: yes : Defending a city? [0] : no [1]: yes : Disembarkment ? [0] : no [1]: yes : Supply line cut ? [0]:no [1]:yesGeneral's defense skills : General's attack skills : Offensive Tactic bonus : Defensive Tactic bonus : Setting pop
+nearby population
+
+The Second Side won the battle!
+-------------------------------------------------------------------------------
+Casualties for WombatKingdom
+|Unit Type		|Remaining	|Wounded	|Dead
+--------------------
+ infantry            	 4         	 3         	 1
+ tank                	 1         	 1         	 0
+ AFV                 	 0         	 0         	 0
+ AAA                 	 1         	 0         	 0
+ FA                  	 1         	 0         	 0
+--------------------
+ conscript infantry  	 18        	 1         	 1
+ conscript tank      	 1         	 0         	 0
+ conscript AFV       	 0         	 0         	 0
+ conscript AAA       	 0         	 0         	 0
+ conscript FA        	 0         	 0         	 0
+--------------------
+ fighter             	 0         	 0         	 0
+ bomber              	 1         	 0         	 0
+--------------------
+ conscript fighter   	 3         	 0         	 0
+ conscript bomber    	 0         	 0         	 0
+-------------------------------------------------------------------------------
+Casualties for Ballyhoo
+|Unit Type		|Remaining	|Wounded	|Dead
+--------------------
+ infantry            	 9         	 1         	 0
+ tank                	 2         	 0         	 0
+ AFV                 	 6         	 0         	 0
+ AAA                 	 0         	 0         	 0
+ FA                  	 0         	 0         	 0
+--------------------
+ conscript infantry  	 3         	 0         	 0
+ conscript tank      	 0         	 0         	 0
+ conscript AFV       	 0         	 0         	 0
+ conscript AAA       	 7         	 1         	 0
+ conscript FA        	 0         	 0         	 0
+--------------------
+ fighter             	 1         	 0         	 0
+ bomber              	 0         	 0         	 0
+--------------------
+ conscript fighter   	 0         	 0         	 0
+ conscript bomber    	 0         	 0         	 0
+Civil casualties: 0.0
