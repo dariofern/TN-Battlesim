@@ -7,6 +7,7 @@ import random
 import sys
 
 SAMPLES_PATH = f"{pathlib.Path(__file__).parent}/sample_inputs"
+SEED = 7192875936957918
 
 def matches_expected(input_file):
     """
@@ -31,7 +32,6 @@ def matches_expected(input_file):
     output.seek(0)
     with open(f"{SAMPLES_PATH}/expected_{input_file}", "r") as f:
         expected = f.read()
-    print(expected)
     return output.read() == expected
 
 class TestRegressions:
@@ -44,7 +44,7 @@ class TestRegressions:
         """
         Seeds the random number generator so results are always consistent.
         """
-        random.seed(7192875936957918)
+        random.seed(SEED)
 
     def test_seed(self):
         """

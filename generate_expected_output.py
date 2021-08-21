@@ -3,9 +3,21 @@
 # Generate the expected output for a given input file; useful for making
 # test cases.
 
+import tests
+
 import contextlib
 import pathlib
+import random
 import sys
+
+def generate_expected_output(input_file, expected_output_file):
+    random.seed(tests.SEED)
+    with open(input_file, "r") as f:
+        sys.stdin = f
+        with open(expected_output_file, "w") as out:
+            with contextlib.redirect_stdout(out):
+                import battlesim1
+    sys.stdin = sys.__stdin__
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -28,10 +40,6 @@ if __name__ == "__main__":
             sys.exit()
         print("-" * 40)
 
-    with open(input_file, "r") as f:
-        sys.stdin = f
-        with open(expected_output_file, "w") as out:
-            with contextlib.redirect_stdout(out):
-                import battlesim1
+    generate_expected_output(input_file, expected_output_file)
 
     print(f"Wrote expected output to {expected_output_file}")
