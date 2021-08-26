@@ -3,6 +3,11 @@
 ## Test Cases
 The test cases are designed for use with the nose test framework.
 
+To install nose on Windows:
+ - `py -m pip install nose`
+
+Pip will warn if the instlled scripts aren't in PATH. If that happens you need to add them to PATH like the warning suggests.
+
 After installing nose, to run the tests:
  - `nosetests -v`
 
